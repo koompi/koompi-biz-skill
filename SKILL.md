@@ -6,9 +6,9 @@
 
 | Key | Value |
 |---|---|
-| **GraphQL** | `https://lite-api.riverbase.org/graphql` |
-| **Upload** | `https://lite-api.riverbase.org/uploads` (multipart POST, returns URL path) |
-| **Auth** | `Authorization: Bearer <USER_TOKEN>` header on all requests |
+| **GraphQL** | `https://api.riverbase.org/graphql` |
+| **Upload** | `https://api.riverbase.org/uploads` (multipart POST, returns URL path) |
+| **Auth** | `Authorization: <USER_TOKEN>` header on all requests (no `Bearer` prefix) |
 | **Method** | `POST` with `Content-Type: application/json` body `{"query":"...","variables":{...}}` |
 
 ---

@@ -71,7 +71,7 @@ Each file contains **copy-paste-ready GraphQL** queries and mutations with exact
 1. **Load [`SKILL.md`](SKILL.md)** — it contains auth setup, the enum reference, and a keyword-based router table.
 2. **Run the Bootstrap Query** (in SKILL.md) to resolve the user's `shopId`.
 3. **Load only the sub-file you need** based on what the user is asking. Don't load everything at once.
-4. **Execute the GraphQL** against `https://lite-api.riverbase.org/graphql` with the user's Bearer token.
+4. **Execute the GraphQL** against `https://api.riverbase.org/graphql` with the user's token (raw token in `Authorization` header, no `Bearer` prefix).
 
 ### System Prompt Example
 
@@ -101,9 +101,9 @@ All prices are String type. Pagination defaults: limit 20, page 1.
 
 | | |
 |---|---|
-| **GraphQL Endpoint** | `https://lite-api.riverbase.org/graphql` |
-| **Upload Endpoint** | `https://lite-api.riverbase.org/uploads` |
-| **Auth** | `Authorization: Bearer <token>` |
+| **GraphQL Endpoint** | `https://api.riverbase.org/graphql` |
+| **Upload Endpoint** | `https://api.riverbase.org/uploads` |
+| **Auth** | `Authorization: <token>` (no `Bearer` prefix) |
 | **Method** | `POST` with JSON body `{"query": "...", "variables": {...}}` |
 
 ## License
