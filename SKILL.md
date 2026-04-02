@@ -47,6 +47,7 @@ Load **only** the file relevant to the user's request:
 | [admin/team.md](skills/admin/team.md) | "add staff", "create role", "remove member" |
 | [admin/shipping.md](skills/admin/shipping.md) | "shipping fee", "delivery zones", "add delivery option" |
 | [admin/discounts.md](skills/admin/discounts.md) | "create coupon", "discount rule", "sale on product" |
+| [admin/sections.md](skills/admin/sections.md) | "create section", "add banner", "homepage layout", "design", "storefront" |
 
 ### Advanced Features
 | File | Use when user says… |
@@ -135,6 +136,8 @@ Show a summary of what will be affected, then ask "Are you sure? Reply Yes to co
 | `deleteDeliveryOption` | Removes a delivery option | admin/shipping.md |
 | `deleteCoupon` | Deletes a coupon code | admin/discounts.md |
 | `deleteDiscountRule` | Deletes a discount rule | admin/discounts.md |
+| `deleteSection` | Deletes a storefront section | admin/sections.md |
+| `deleteDesign` | Deletes a canvas design | admin/sections.md |
 | `deleteTeir` | Deletes a membership tier | advanced/membership.md |
 | `deleteMembership` | Revokes a user's membership | advanced/membership.md |
 | `deleteDns` | Removes custom domain | advanced/dns.md |

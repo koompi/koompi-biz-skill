@@ -49,6 +49,7 @@ skills/
     team.md                       ← Roles & members
     shipping.md                   ← Shipping rules & delivery options
     discounts.md                  ← Coupons & discount rules (with recipes)
+    sections.md                   ← Storefront sections & canvas designs
   advanced/
     membership.md                 ← VIP tiers & membership cards
     quotations.md                 ← Contract quotations & revisions
