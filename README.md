@@ -55,6 +55,11 @@ skills/
     content.md                    ← Blog posts & events
     dns.md                        ← Custom domain management
     plugins.md                    ← Plugin marketplace
+  superadmin/
+    dashboard.md                  ← Platform-wide metrics & revenue
+    shops.md                      ← All shops, activate/deactivate
+    users.md                      ← All users, freeze/activate
+    business-categories.md        ← Platform business category CRUD
 ```
 
 Each file contains **copy-paste-ready GraphQL** queries and mutations with exact field names, enum values, and variable types — extracted from the production frontend.

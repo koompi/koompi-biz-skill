@@ -56,6 +56,14 @@ Load **only** the file relevant to the user's request:
 | [advanced/dns.md](skills/advanced/dns.md) | "custom domain", "connect domain", "DNS settings" |
 | [advanced/plugins.md](skills/advanced/plugins.md) | "install plugin", "list plugins", "shade finder", "plugin settings" |
 
+### Superadmin (Platform-Level — requires `role: "admin"`)
+| File | Use when user says… |
+|---|---|
+| [superadmin/dashboard.md](skills/superadmin/dashboard.md) | "platform stats", "total revenue", "top shops", "platform dashboard" |
+| [superadmin/shops.md](skills/superadmin/shops.md) | "list all shops", "activate shop", "deactivate shop", "all shops" |
+| [superadmin/users.md](skills/superadmin/users.md) | "list all users", "freeze user", "activate user", "all users" |
+| [superadmin/business-categories.md](skills/superadmin/business-categories.md) | "business categories", "add biz category", "shop types" |
+
 ---
 
 ## GraphQL Enums Reference
@@ -130,6 +138,9 @@ Show a summary of what will be affected, then ask "Are you sure? Reply Yes to co
 | `deleteMembership` | Revokes a user's membership | advanced/membership.md |
 | `deleteDns` | Removes custom domain | advanced/dns.md |
 | `pluginUninstall` | Uninstalls a plugin | advanced/plugins.md |
+| `shopActivate(active: false)` | Deactivates a shop (storefront goes offline) | superadmin/shops.md |
+| `userSetActive(active: false)` | Freezes a user (loses all access) | superadmin/users.md |
+| `deleteBusinessCategory` | Deletes a platform business category | superadmin/business-categories.md |
 
 ### Bootstrap Query (run first in every session)
 ```graphql
