@@ -48,8 +48,8 @@ find / -maxdepth 4 -name '.env' -exec grep -l 'RIVERBASE' {} \; 2>/dev/null | he
 Once you have output like:
 ```
 RIVERBASE_API_URL=https://staging-lite-api.riverbase.org/graphql
-RIVERBASE_API_KEY=rb_live_abc123...
-RIVERBASE_SHOP_ID=69d63071b46ac83c4514a5b
+RIVERBASE_API_KEY=<a real key from the .env file>
+RIVERBASE_SHOP_ID=<a real shop id from the .env file>
 ```
 
 **Use these values directly** in your GraphQL requests:
