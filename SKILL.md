@@ -15,43 +15,55 @@
 | **API Key Auth** | For server/agent access, set `RIVERBASE_API_KEY` and use as the auth token |
 | **Method** | `POST` with `Content-Type: application/json` body `{"query":"...","variables":{...}}` |
 
-### Environment Variables
+### ⚡ Environment Variables — YOU MUST DO THIS FIRST
 
-Three variables are required to operate. Resolve them in this priority order:
+**Before doing anything else, you MUST execute the commands below to obtain `RIVERBASE_API_URL`, `RIVERBASE_API_KEY`, and `RIVERBASE_SHOP_ID`.**
 
-1. **Runtime env** — check if already set in the process environment
-2. **`.env` file** — search common workspace locations
+These are almost never in your runtime environment. **Do not just check `env` and give up.** You have file access — use it.
 
-#### Resolution Steps (run at session start)
+#### Step 1: Read the .env file directly
+
+Execute this command NOW:
 
 ```bash
-# Step 1: Check runtime env
-# If all three are set, skip to Step 2.
-env | grep -E 'RIVERBASE_API_URL|RIVERBASE_API_KEY|RIVERBASE_SHOP_ID'
-
-# Step 2: If not set, search for .env files in common agent workspace paths
-# The workspace directory varies by agent platform (zeroclaw, openclaw, etc.)
-# so search broadly:
-grep -rh 'RIVERBASE_API_URL\|RIVERBASE_API_KEY\|RIVERBASE_SHOP_ID' \
-  /zeroclaw-data/workspace/.env \
-  /openclaw-data/workspace/.env \
-  /data/workspace/.env \
-  /workspace/.env \
-  .env \
-  2>/dev/null
-
-# Step 3: If still not found, do a broader search:
-find / -maxdepth 4 -name '.env' -exec grep -l 'RIVERBASE' {} \; 2>/dev/null | head -5
+grep -E 'RIVERBASE_API_URL|RIVERBASE_API_KEY|RIVERBASE_SHOP_ID' /zeroclaw-data/workspace/.env 2>/dev/null
 ```
 
-#### Variables
-| Variable | Purpose |
-|---|---|
-| `RIVERBASE_API_URL` | GraphQL endpoint (staging or production) |
-| `RIVERBASE_API_KEY` | Auth token — use in `Authorization` header (no `Bearer` prefix) |
-| `RIVERBASE_SHOP_ID` | Default shop to operate on |
+If that file doesn't exist, try these alternatives (execute each one until you get results):
 
-> **Never hardcode these values in the skill files.** They must only come from the runtime environment or `.env` file.
+```bash
+# Try openclaw workspace
+grep -E 'RIVERBASE_API_URL|RIVERBASE_API_KEY|RIVERBASE_SHOP_ID' /openclaw-data/workspace/.env 2>/dev/null
+
+# Try generic paths
+grep -E 'RIVERBASE_API_URL|RIVERBASE_API_KEY|RIVERBASE_SHOP_ID' /data/workspace/.env /workspace/.env .env 2>/dev/null
+
+# Last resort: find any .env containing RIVERBASE somewhere on disk
+find / -maxdepth 4 -name '.env' -exec grep -l 'RIVERBASE' {} \; 2>/dev/null | head -5
+# Then read the file it found
+```
+
+#### Step 2: Extract and use the values
+
+Once you have output like:
+```
+RIVERBASE_API_URL=https://staging-lite-api.riverbase.org/graphql
+RIVERBASE_API_KEY=rb_live_abc123...
+RIVERBASE_SHOP_ID=69d63071b46ac83c4514a5b
+```
+
+**Use these values directly** in your GraphQL requests:
+- `RIVERBASE_API_URL` → the GraphQL endpoint URL
+- `RIVERBASE_API_KEY` → put in `Authorization` header (no `Bearer` prefix)
+- `RIVERBASE_SHOP_ID` → the `shopId` variable in every query/mutation
+
+#### What NOT to do
+- ❌ Do NOT tell the user "the env vars aren't loaded" — you have file access, go read them
+- ❌ Do NOT give up after checking `env` — the .env file is the primary source
+- ❌ Do NOT ask the user to set environment variables manually
+- ❌ Do NOT skip this step and try API calls without auth — they will fail
+
+> **Never hardcode real API keys in the skill files.** They must only come from the runtime environment or `.env` file.
 
 ---
 
