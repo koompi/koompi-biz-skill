@@ -73,6 +73,25 @@ mutation CreateEvent(
 
 ---
 
+## Blog Layout (CMS)
+
+Control how the blog page looks — template, sidebar, featured post, etc. See [shop-layout.md](shop-layout.md#update-blog-layout) for full details and presets.
+
+Quick reference:
+```graphql
+mutation UpdateBlogLayout($shopId: String!, $blogLayout: JSON!) {
+  updateShopBlogLayout(shopId: $shopId, blogLayout: $blogLayout) {
+    id shopId
+    blogLayout { template showFeatured postsPerPage showSidebar showCategories showSearch showAuthor showDate showExcerpt heroTitle heroSubtitle }
+  }
+}
+```
+
+Templates: `classic_list` | `magazine_grid` | `minimal_list` | `card_grid`
+
+---
+
 ## Agent Notes
 - **Posts vs Events**: Posts are blog articles. Events have a date, venue, and optional ticket price/capacity.
 - **Images**: Upload first via `POST /uploads/s3`, then pass returned CDN URLs.
+- **Blog layout**: To customize the blog page appearance (grid vs list, sidebar, featured post), use `updateShopBlogLayout` documented in [shop-layout.md](shop-layout.md).

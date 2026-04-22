@@ -4,13 +4,23 @@
 
 ## Endpoint & Auth
 
+| Environment | GraphQL | Upload | Upload HQ |
+|---|---|---|---|
+| **Production** | `https://api.riverbase.org/graphql` | `https://api.riverbase.org/uploads/s3` | `https://api.riverbase.org/uploads/s3/hq` |
+| **Staging** | `https://staging-lite-api.riverbase.org/graphql` | `https://staging-lite-api.riverbase.org/uploads/s3` | `https://staging-lite-api.riverbase.org/uploads/s3/hq` |
+
 | Key | Value |
 |---|---|
-| **GraphQL** | `https://api.riverbase.org/graphql` |
-| **Upload** | `https://api.riverbase.org/uploads/s3` (multipart POST, field name `file`, returns full CDN URL) |
-| **Upload HQ** | `https://api.riverbase.org/uploads/s3/hq` (same but max 1920px instead of 800px) |
 | **Auth** | `Authorization: <USER_TOKEN>` header on all requests (no `Bearer` prefix) |
+| **API Key Auth** | For server/agent access, set `RIVERBASE_API_KEY` and use as the auth token |
 | **Method** | `POST` with `Content-Type: application/json` body `{"query":"...","variables":{...}}` |
+
+### Environment Variables
+```
+RIVERBASE_API_KEY=rb_live_817e53b08e90304d44476c59b123839de28ede45e3fda92be15bf5fadc9a32e0
+RIVERBASE_API_URL=https://staging-lite-api.riverbase.org/graphql
+RIVERBASE_SHOP_ID=69d63071b46ac83c4514a5b
+```
 
 ---
 
@@ -48,6 +58,7 @@ Load **only** the file relevant to the user's request:
 | [admin/shipping.md](skills/admin/shipping.md) | "shipping fee", "delivery zones", "add delivery option" |
 | [admin/discounts.md](skills/admin/discounts.md) | "create coupon", "discount rule", "sale on product" |
 | [admin/sections.md](skills/admin/sections.md) | "create section", "add banner", "homepage layout", "design", "storefront" |
+| [admin/shop-layout.md](skills/admin/shop-layout.md) | "header", "footer", "about page", "shop layout", "customize header", "footer links", "about us page", "blog layout", "navigation", "announcement bar" |
 | [admin/appearance.md](skills/admin/appearance.md) | "change theme", "custom colors", "shop appearance", "upload font", "change font", "border radius", "dark mode", "branding", "reset theme" |
 | [admin/customer-auth.md](skills/admin/customer-auth.md) | "customer login", "telegram auth", "user token", "initData", "connect account", "register user", "customer JWT" |
 | [admin/customer-service-agent.md](skills/admin/customer-service-agent.md) | "build CS bot", "customer service agent", "shop bot", "telegram bot for customers", "AI assistant for shop", "OpenClaw agent" |
@@ -57,7 +68,7 @@ Load **only** the file relevant to the user's request:
 |---|---|
 | [advanced/membership.md](skills/advanced/membership.md) | "VIP tier", "membership card", "loyalty program", "add member" |
 | [advanced/quotations.md](skills/advanced/quotations.md) | "create quote", "send quotation", "revise quote", "contract pricing" |
-| [advanced/content.md](skills/advanced/content.md) | "write blog post", "create event", "publish article", "ticket event" |
+| [advanced/content.md](skills/advanced/content.md) | "write blog post", "create event", "publish article", "ticket event", "blog layout", "cms" |
 | [advanced/dns.md](skills/advanced/dns.md) | "custom domain", "connect domain", "DNS settings" |
 | [advanced/plugins.md](skills/advanced/plugins.md) | "install plugin", "list plugins", "shade finder", "plugin settings" |
 
@@ -140,6 +151,7 @@ Show a summary of what will be affected, then ask "Are you sure? Reply Yes to co
 | `deleteCoupon` | Deletes a coupon code | admin/discounts.md |
 | `deleteDiscountRule` | Deletes a discount rule | admin/discounts.md |
 | `deleteSection` | Deletes a storefront section | admin/sections.md |
+| `resetShopLayout` | Resets all layout customizations (header, footer, about, blog) to defaults | admin/shop-layout.md |
 | `deleteDesign` | Deletes a canvas design | admin/sections.md |
 | `deleteTeir` | Deletes a membership tier | advanced/membership.md |
 | `deleteMembership` | Revokes a user's membership | advanced/membership.md |

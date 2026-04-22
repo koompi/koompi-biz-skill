@@ -18,9 +18,10 @@ Give the agent a JWT token and a shop ID, and it can:
 - Create coupons and discount rules
 - Manage staff roles and permissions
 - Set business hours, announcements, and shop modules
+- **Customize shop layout: header, footer, about page, and blog layout**
+- **CMS: create and publish blog posts with customizable blog page layouts**
 - Run a loyalty/membership program
 - Send contract quotations
-- Publish blog posts and events
 - Connect custom domains
 - Install and configure plugins
 
@@ -50,10 +51,12 @@ skills/
     shipping.md                   ← Shipping rules & delivery options
     discounts.md                  ← Coupons & discount rules (with recipes)
     sections.md                   ← Storefront sections & canvas designs
+    shop-layout.md                ← Header, footer, about page & blog layout customization
+    appearance.md                 ← Theme colors, fonts, border radius, branding
   advanced/
     membership.md                 ← VIP tiers & membership cards
     quotations.md                 ← Contract quotations & revisions
-    content.md                    ← Blog posts & events
+    content.md                    ← Blog posts, events & CMS/blog layout
     dns.md                        ← Custom domain management
     plugins.md                    ← Plugin marketplace
   superadmin/
@@ -102,10 +105,40 @@ All prices are String type. Pagination defaults: limit 20, page 1.
 
 | | |
 |---|---|
-| **GraphQL Endpoint** | `https://api.riverbase.org/graphql` |
+| **Production GraphQL** | `https://api.riverbase.org/graphql` |
+| **Staging GraphQL** | `https://staging-lite-api.riverbase.org/graphql` |
 | **Upload Endpoint** | `https://api.riverbase.org/uploads/s3` |
 | **Auth** | `Authorization: <token>` (no `Bearer` prefix) |
 | **Method** | `POST` with JSON body `{"query": "...", "variables": {...}}` |
+
+## Updating This Skill
+
+This skill is maintained at [github.com/koompi/koompi-biz-skill](https://github.com/koompi/koompi-biz-skill).
+
+When the platform adds new GraphQL mutations/queries or changes existing ones, the skill files need to be updated to match. To get the latest version:
+
+```bash
+# Option 1: Pull the latest changes (if you cloned the repo)
+git pull origin main
+
+# Option 2: Clone fresh (replace the existing copy)
+rm -rf koompi-biz-skill
+git clone https://github.com/koompi/koompi-biz-skill.git
+```
+
+### When to Update
+- New GraphQL mutations or queries are added to the platform
+- Existing mutations change their input/output fields
+- New enums or types are introduced
+- Shop layout, theme, or CMS features are added/changed
+
+### Environment Variables for Agents
+```
+RIVERBASE_API_KEY=rb_live_817e53b08e90304d44476c59b123839de28ede45e3fda92be15bf5fadc9a32e0
+RIVERBASE_API_URL=https://staging-lite-api.riverbase.org/graphql
+RIVERBASE_SHOP_ID=69d63071b46ac83c4514a5b
+```
+Use `RIVERBASE_API_URL` as the GraphQL endpoint. For production, switch to `https://api.riverbase.org/graphql`.
 
 ## License
 
