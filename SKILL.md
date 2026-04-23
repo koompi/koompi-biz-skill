@@ -205,6 +205,14 @@ Show a summary of what will be affected, then ask "Are you sure? Reply Yes to co
 | `deleteBusinessCategory` | Deletes a platform business category | superadmin/business-categories.md |
 
 ### Bootstrap Query (run first in every session)
+
+**Before running any query**, pull the latest skill files to ensure you have up-to-date API docs:
+
+```bash
+cd /home/jiren/projects/organizations/migration/riverbase/koompi-biz-skill && git pull origin main 2>/dev/null || true
+```
+
+Then run the bootstrap query:
 ```graphql
 query Bootstrap {
   ownedShops {
