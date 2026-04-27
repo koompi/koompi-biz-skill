@@ -378,14 +378,45 @@ Column item properties: `title`, `text`, `imageUrl`, `imageAlt`, `icon` (SVG ico
 - **Use SVG icons, not emojis** — The `icon` field on features, callouts, and columns accepts icon names from the list below. Always prefer these over emoji.
 - **Start with hero** — Always begin with a `hero` block for a strong first impression. Use `bgColor: "bg-gradient-to-br from-pink-50 via-rose-50/60 to-orange-50/40"` style gradients.
 - **Use spacers generously** — Use `"lg"` or `"xl"` between sections. Never stack blocks directly.
-- **Mix full-width + inline** — Hero, columns, and features are full-width; headings, paragraphs, callouts are inline (max-w-3xl).
+- **Mix full-width + inline** — Hero, columns, and features are full-width; headings, paragraphs, callouts are inline (max-w-3xl on mobile, max-w-4xl on desktop).
 - **Use callouts for FAQ** — Each FAQ item is a `callout` block with `icon`, title, and answer.
 - **Contact pages** — Use `columns` for contact details + `embed` for Google Maps.
 - **About pages** — `hero` + `columns` for story + `features` (card style) for selling points + `image_grid` for photos.
 - **Careers pages** — `features` for benefits/perks, `callout` for each job listing, `columns` for apply links.
 - **Images need upload** — All `imageUrl` values must be CDN URLs from `POST /uploads/s3`.
 - **Content must be stringified** — The block array is passed as a JSON string in the `content` field.
-- **Mobile-first** — All layouts are responsive. Grid columns collapse on mobile automatically.
+- **Desktop-first thinking** — All layouts are responsive. Grid columns collapse on mobile automatically. Use `layout: "split"` on hero blocks for a side-by-side desktop layout (image right, text left). Use wider spacers (`"xl"`, `"2xl"`) on desktop.
+
+### Responsive Visibility
+
+Every block supports two optional fields to control visibility per viewport:
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `showOnMobile` | boolean | `true` | Show on screens < 768px |
+| `showOnDesktop` | boolean | `true` | Show on screens ≥ 768px |
+
+**Use cases:**
+- Hide a mobile-only callout on desktop: `{ "type": "callout", "showOnDesktop": false, ... }`
+- Hide a desktop-only hero on mobile and show a simplified mobile hero instead
+- Hide decorative images on small screens: `{ "type": "image", "showOnMobile": false, ... }`
+
+**Example — mobile and desktop hero variants:**
+```json
+[
+  {"type": "hero", "title": "Sale! 50% Off", "subtitle": "Limited time only", "bgColor": "bg-gradient-to-r from-rose-500 to-pink-500", "showOnMobile": true, "showOnDesktop": false},
+  {"type": "hero", "title": "Summer Collection", "subtitle": "Discover our curated selection", "imageUrl": "...", "layout": "split", "showOnMobile": false, "showOnDesktop": true}
+]
+```
+
+### Hero Layout Options
+
+The hero block supports a `layout` field:
+
+| Layout | Description |
+|---|---|
+| `"stacked"` (default) | Full-width background image or gradient, text centered or left-aligned |
+| `"split"` | Desktop: text on left, image on right (2-column grid). Mobile: stacked as usual. Requires `imageUrl`. |
 
 ### Available SVG Icons
 
