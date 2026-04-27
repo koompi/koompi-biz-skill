@@ -31,6 +31,111 @@ Returns `null` if no composable layout is set (shop uses legacy mode), or a JSON
 
 ---
 
+## Visual Preferences (Storefront Styling)
+
+In addition to page structure, you can control the **visual appearance** of the storefront by setting `visualPrefs` inside the page config. These preferences apply to **every page** (homepage, products, search, categories), not just the composable homepage.
+
+### How to Set Visual Preferences
+
+Include `visualPrefs` in the `pageConfig` JSON when calling `updatePageConfig`. You can update just the preferences without changing the page structure.
+
+```graphql
+mutation SetVisualPrefs($shopId: String!, $pageConfig: JSON!) {
+  updatePageConfig(shopId: $shopId, pageConfig: $pageConfig)
+}
+```
+
+### Minimal Example — Change Card Style Only
+
+```json
+{
+  "version": 1,
+  "visualPrefs": {
+    "cardStyle": "OVERLAY"
+  },
+  "root": { ...existing tree... }
+}
+```
+
+### Available Visual Preferences
+
+| Preference | Type | Values | Default | Description |
+|---|---|---|---|---|
+| `cardStyle` | string | `"MINIMAL"`, `"BORDERED"`, `"OVERLAY"`, `"GLASS"` | `"MINIMAL"` | Product card visual style. MINIMAL = clean flat, BORDERED = card with border, OVERLAY = text over image with gradient, GLASS = frosted glass panel |
+| `sectionSpacing` | string | `"none"`, `"sm"`, `"md"`, `"lg"`, `"xl"` | none | Vertical spacing between sections on the homepage |
+| `containerMaxWidth` | string | `"max-w-4xl"`, `"max-w-5xl"`, `"max-w-6xl"`, `"max-w-7xl"`, `"max-w-full"` | `"max-w-7xl"` | Max width of the main content area |
+| `sectionPadding` | string | `"NONE"`, `"SM"`, `"MD"`, `"LG"` | `"MD"` | Inner padding inside section wrappers |
+| `titleAlignment` | string | `"LEFT"`, `"CENTER"`, `"RIGHT"` | `"LEFT"` | Default alignment for section titles |
+| `showSectionTitles` | boolean | `true`, `false` | `true` | Show or hide section titles globally |
+| `itemGap` | string | `"NONE"`, `"SM"`, `"MD"`, `"LG"` | `"MD"` | Gap between grid/slider items |
+
+### Card Styles Explained
+
+| Style | Description | Best For |
+|---|---|---|
+| `MINIMAL` | Clean flat card, square image, price below. No border. | Most shops, clean look |
+| `BORDERED` | Card with rounded border, image on top, info below with padding | Professional, product-focused |
+| `OVERLAY` | Tall portrait image (3:4), product name and price overlaid at bottom with gradient | Fashion, lifestyle, visually rich |
+| `GLASS` | Tall portrait image with frosted glass panel at bottom | Modern, premium, luxury |
+
+### Workflow: Update Visual Preferences
+
+1. **Fetch current config** — `ShopPageConfig` to get the full `pageConfig` object
+2. **Modify visualPrefs** — Update only the `visualPrefs` field, keep `root` unchanged
+3. **Save** — Call `updatePageConfig` with the full config (both `visualPrefs` and `root`)
+4. **Verify** — Re-fetch to confirm
+
+### Example: Change to OVERLAY cards with more spacing
+
+```json
+{
+  "version": 1,
+  "visualPrefs": {
+    "cardStyle": "OVERLAY",
+    "sectionSpacing": "lg",
+    "containerMaxWidth": "max-w-6xl"
+  },
+  "root": { ...keep existing root tree unchanged... }
+}
+```
+
+### Example: Professional bordered cards, centered titles, no spacing
+
+```json
+{
+  "version": 1,
+  "visualPrefs": {
+    "cardStyle": "BORDERED",
+    "titleAlignment": "CENTER",
+    "showSectionTitles": true,
+    "sectionPadding": "LG"
+  },
+  "root": { ...keep existing root tree unchanged... }
+}
+```
+
+### Common User Requests → Visual Prefs
+
+| User Says | Action |
+|---|---|
+| "Make product cards look modern/premium" | Set `cardStyle: "GLASS"` or `cardStyle: "OVERLAY"` |
+| "I want tall product images" | Set `cardStyle: "OVERLAY"` or `cardStyle: "GLASS"` (both use 3:4 portrait ratio) |
+| "Add more space between sections" | Set `sectionSpacing: "lg"` or `sectionSpacing: "xl"` |
+| "Make it narrower" | Set `containerMaxWidth: "max-w-5xl"` or `containerMaxWidth: "max-w-4xl"` |
+| "Make it full width" | Set `containerMaxWidth: "max-w-full"` |
+| "Hide section titles" | Set `showSectionTitles: false` |
+| "Center all the titles" | Set `titleAlignment: "CENTER"` |
+| "Make cards look cleaner/minimal" | Set `cardStyle: "MINIMAL"` |
+| "Add borders to product cards" | Set `cardStyle: "BORDERED"` |
+| "Add more padding to sections" | Set `sectionPadding: "LG"` |
+| "Reduce gaps between products" | Set `itemGap: "SM"` or `itemGap: "NONE"` |
+
+> **IMPORTANT:** Visual prefs apply to ALL pages (homepage, products page, search results, categories). When you set `cardStyle: "OVERLAY"`, every product card on the entire storefront switches to the overlay style.
+
+> **Note:** Colors, fonts, and border radius are controlled separately via `updateTheme` (see [appearance.md](appearance.md)). Visual prefs control layout and card style only.
+
+---
+
 ## Set Page Config
 
 ```graphql
@@ -452,4 +557,5 @@ When modifying a config, keep the existing `id` values for unchanged nodes. Only
 - **Container className uses Tailwind CSS** — you can use any Tailwind utility: `max-w-7xl mx-auto space-y-8 p-4 bg-gray-50 rounded-xl`, etc.
 - **The composable system is additive** — it doesn't replace the sections system. Sections still live in the database and are referenced by ID. The page config just controls their arrangement and wrapping.
 - **No `Layout.Header`/`Layout.Footer`/`Layout.MobileNav` content is rendered** — these are no-ops in the composable renderer because the platform app layout (LayoutShop) already provides the real header/footer/mobile nav. They exist in the tree for future theming support.
-- **Themes** — Visual style (card appearance, colors, spacing) is controlled by the theme system (see [appearance.md](appearance.md)). The page config controls structure/arrangement, not style.
+- **Visual preferences** — Card style, section spacing, padding, title alignment, etc. are controlled via `visualPrefs` in the page config (see above). These apply to every page.
+- **Colors/fonts/radius** — Controlled via `updateTheme` (see [appearance.md](appearance.md)). This is a separate system from visual prefs.
