@@ -19,6 +19,8 @@ Give the agent a JWT token and a shop ID, and it can:
 - Manage staff roles and permissions
 - Set business hours, announcements, and shop modules
 - **Customize shop layout: header, footer, about page, and blog layout**
+- **Section Explorer: build storefront homepages with 20+ section kinds (hero, promo mosaic, FAQ, testimonials, countdown, video, etc.) — each with per-section background, text color, and draft/published lifecycle**
+- **Discount engine: line-item / cart / shipping / BXGY rules, plus merchant overrides (`forceApply`, `exclusionGroupId`, `exclusiveWithBxgy`) and per-customer caps**
 - **CMS: create and publish blog posts with customizable blog page layouts**
 - Run a loyalty/membership program
 - Send contract quotations
@@ -49,10 +51,14 @@ skills/
     modules.md                    ← Feature toggles, business hours
     team.md                       ← Roles & members
     shipping.md                   ← Shipping rules & delivery options
-    discounts.md                  ← Coupons & discount rules (with recipes)
-    sections.md                   ← Storefront sections & canvas designs
+    discounts.md                  ← Coupons & discount rules (force apply, exclusion groups, BXGY, recipes)
+    sections.md                   ← Section Explorer + canvas designs (20+ section kinds, kindConfig, backgrounds, draft/publish lifecycle)
     shop-layout.md                ← Header, footer, about page & blog layout customization
     appearance.md                 ← Theme colors, fonts, border radius, branding
+    pages.md                      ← Custom pages (about, terms, FAQ, contact)
+    seo.md                        ← Meta title, description, favicon, og image
+    customer-auth.md              ← Customer login, Telegram auth
+    customer-service-agent.md     ← Build customer-facing CS bots
   advanced/
     membership.md                 ← VIP tiers & membership cards
     quotations.md                 ← Contract quotations & revisions

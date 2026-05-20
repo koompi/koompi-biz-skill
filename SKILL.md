@@ -102,9 +102,8 @@ Load **only** the file relevant to the user's request:
 | [admin/team.md](skills/admin/team.md) | "add staff", "create role", "remove member" |
 | [admin/shipping.md](skills/admin/shipping.md) | "shipping fee", "delivery zones", "add delivery option" |
 | [admin/discounts.md](skills/admin/discounts.md) | "create coupon", "discount rule", "sale on product" |
-| [admin/sections.md](skills/admin/sections.md) | "create section", "add banner", "homepage layout", "design", "storefront" |
+| [admin/sections.md](skills/admin/sections.md) | "create section", "add banner", "hero", "promo banner", "categories grid", "testimonials", "FAQ", "newsletter", "video hero", "countdown", "section explorer", "homepage layout", "design", "storefront" |
 | [admin/shop-layout.md](skills/admin/shop-layout.md) | "header", "footer", "about page", "customize header", "footer links", "about us page", "blog layout", "navigation", "announcement bar" |
-| [admin/page-layout.md](skills/admin/page-layout.md) | "page layout", "composable layout", "AI design", "storefront design", "banner slider", "arrange sections", "modern layout", "homepage design", "page config" |
 | [admin/appearance.md](skills/admin/appearance.md) | "change theme", "custom colors", "shop appearance", "upload font", "change font", "border radius", "dark mode", "branding", "reset theme" |
 | [admin/customer-auth.md](skills/admin/customer-auth.md) | "customer login", "telegram auth", "user token", "initData", "connect account", "register user", "customer JWT" |
 | [admin/customer-service-agent.md](skills/admin/customer-service-agent.md) | "build CS bot", "customer service agent", "shop bot", "telegram bot for customers", "AI assistant for shop", "OpenClaw agent" |
@@ -160,11 +159,33 @@ CartMode:        DETAILS_ONLY | FULL_CHECKOUT
 CardStyle:       MINIMAL | BORDERED | OVERLAY | GLASS
 ```
 
+### Section Enums (Section Explorer)
+```
+SectionKind:     hero_editorial | hero_immersive | hero_centered_minimal
+                 | grid | slider | horizontal_scroll
+                 | products_editorial_spotlight
+                 | categories_grid | categories_asymmetric_bento
+                 | promo_mosaic | promo_single_banner
+                 | testimonials_cards | testimonials_carousel
+                 | faq_accordion | brand_strip
+                 | image_text | cta_banner | countdown
+                 | rich_text | newsletter | video_hero
+SectionStatus:   draft | published | hidden
+SectionLayout:   Grid1 | Grid2 | Grid3 | Slider | HorizontalScroll
+SectionSpacing:  None | Sm | Md | Lg | Xl | Xxl
+DataSource:      products | events | posts | productCategories | eventCategories | postCategories
+DataType:        Static | Dynamic
+StaticType:      Design | Image
+TitleAlignment:  Left | Center | Right
+```
+
 ### Discount Enums
 ```
-DiscountScope:   LINE_ITEM | TOTAL_CART | SHIPPING
-DiscountType:    FIXED | PERCENTAGE | LOCKED_PRICE
-UsageTarget:     EVERY_ONE | MEMBERSHIP | COUPON
+DiscountScope:        LINE_ITEM | TOTAL_CART | SHIPPING | BUY_X_GET_Y
+DiscountType:         FIXED | PERCENTAGE | LOCKED_PRICE
+ShippingDiscountType: FIXED | PERCENTAGE | FREE
+BxgyGetDiscountType:  FREE | PERCENTAGE | FIXED_AMOUNT_OFF
+UsageTarget:          EVERY_ONE | MEMBERSHIP | COUPON
 ```
 
 ---
@@ -199,7 +220,6 @@ Show a summary of what will be affected, then ask "Are you sure? Reply Yes to co
 | `deleteDiscountRule` | Deletes a discount rule | admin/discounts.md |
 | `deleteSection` | Deletes a storefront section | admin/sections.md |
 | `resetShopLayout` | Resets all layout customizations (header, footer, about, blog) to defaults | admin/shop-layout.md |
-| `updatePageConfig(pageConfig: null)` | Clears composable page config, reverts to legacy layout | admin/page-layout.md |
 | `deleteDesign` | Deletes a canvas design | admin/sections.md |
 | `deleteTeir` | Deletes a membership tier | advanced/membership.md |
 | `deleteMembership` | Revokes a user's membership | advanced/membership.md |
