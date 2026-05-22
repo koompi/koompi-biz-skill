@@ -4,10 +4,17 @@
 
 ## Endpoint & Auth
 
-| Environment | GraphQL | Upload | Upload HQ |
-|---|---|---|---|
-| **Production** | `https://api.riverbase.org/graphql` | `https://api.riverbase.org/uploads/s3` | `https://api.riverbase.org/uploads/s3/hq` |
-| **Staging** | `https://staging-lite-api.riverbase.org/graphql` | `https://staging-lite-api.riverbase.org/uploads/s3` | `https://staging-lite-api.riverbase.org/uploads/s3/hq` |
+| Environment | GraphQL | Upload | Upload HQ | Font Upload |
+|---|---|---|---|---|
+| **Production** | `https://api.riverbase.org/graphql` | `https://api.riverbase.org/uploads/s3` | `https://api.riverbase.org/uploads/s3/hq` | `https://api.riverbase.org/uploads/font` |
+| **Staging** | `https://staging-lite-api.riverbase.org/graphql` | `https://staging-lite-api.riverbase.org/uploads/s3` | `https://staging-lite-api.riverbase.org/uploads/s3/hq` | `https://staging-lite-api.riverbase.org/uploads/font` |
+
+All upload endpoints accept `multipart/form-data` POST with field name `file`,
+authenticated via the same `Authorization: <token>` header. Response body is
+the full CDN URL string.
+- `/uploads/s3` → ≤800px WebP (logos, thumbs, small decorative).
+- `/uploads/s3/hq` → ≤1920px WebP (hero / banner / promo / immersive).
+- `/uploads/font` → font files (`.woff2`, `.woff`, `.ttf`, `.otf`, max 2 MB).
 
 | Key | Value |
 |---|---|
@@ -74,7 +81,7 @@ Load **only** the file relevant to the user's request:
 ### Catalog (Products, Categories, Brands)
 | File | Use when user says… |
 |---|---|
-| [catalog/products.md](skills/catalog/products.md) | "add product", "update price", "archive item", "search products" |
+| [catalog/products.md](skills/catalog/products.md) | "add product", "update price", "archive item", "search products", "combo", "bundle", "shade finder", "cosmetics try-on" |
 | [catalog/categories.md](skills/catalog/categories.md) | "create category", "list categories", "add subcategory" |
 | [catalog/brands.md](skills/catalog/brands.md) | "add brand", "list brands" |
 
@@ -117,7 +124,7 @@ Load **only** the file relevant to the user's request:
 | [advanced/quotations.md](skills/advanced/quotations.md) | "create quote", "send quotation", "revise quote", "contract pricing" |
 | [advanced/content.md](skills/advanced/content.md) | "write blog post", "create event", "publish article", "ticket event", "blog layout", "cms" |
 | [advanced/dns.md](skills/advanced/dns.md) | "custom domain", "connect domain", "DNS settings" |
-| [advanced/plugins.md](skills/advanced/plugins.md) | "install plugin", "list plugins", "shade finder", "plugin settings" |
+| [advanced/plugins.md](skills/advanced/plugins.md) | "install plugin", "list plugins", "plugin settings" |
 
 ### Superadmin (Platform-Level — requires `role: "admin"`)
 | File | Use when user says… |
@@ -201,11 +208,87 @@ UsageTarget:          EVERY_ONE | MEMBERSHIP | COUPON
 
 ## Global Agent Rules
 
-1. **Resolve IDs first.** When a user refers to a product/category/brand by name, always run a search or list query to get the `id` before mutating.
+1. **Resolve IDs first.** When a user refers to a product/category/brand/customer/variant by name, run a search or list query to get the `id` before mutating.
 2. **Price = String.** All monetary values (`price`, `amount`, `unitPrice`) are passed as `String` in GraphQL to preserve decimal precision.
 3. **shopId is always required.** Every query/mutation requires `shopId`. Resolve it once at the start of a conversation via `ownedShops` or `joinedShops`.
 4. **Pagination.** List queries return `{ data, limit, skip, totalPages, totalDocuments }`. Default to `limit: 20, page: 1`.
 5. **Soft delete.** Products are archived (`productSetArchived`), not hard-deleted. Use `productDelete` only when the user explicitly says "permanently delete."
+
+## Critical Conventions — read before any mutation
+
+These bite agents that skip the per-skill files. Internalize all of them.
+
+### Image / video / font inputs are ALWAYS uploaded CDN URLs
+
+Any field shaped like `image: { url, alt }`, `images: [String!]`, `logo: String`,
+`imageUrl: String`, `coverImage: String`, `output: String` (designs), or
+`sourceUrl: String` (video hero) takes a **real CDN URL from the upload
+endpoints above** — never a literal path, placeholder, or external URL the
+storefront doesn't control. Upload first, then write the returned string into
+the mutation.
+
+```bash
+# canonical recipe
+curl -X POST -H "Authorization: $RIVERBASE_API_KEY" \
+  -F "file=@./local.jpg" "$RIVERBASE_API_URL/uploads/s3/hq"
+# → "https://cdn.riverbase.org/<uuid>.webp"
+```
+
+### JSON-scalar inputs take parsed JSON, not strings
+
+`updateTheme(theme: JSON!)`, `updateShopHeader(header: JSON!)`,
+`updateShopFooter`, `updateShopAboutPage`, `updateShopBlogLayout`,
+`updateShopLayout`, and `createSection`/`updateSection`'s `kindConfig: JSON`
+all accept the JSON value directly (an object in `variables`), **not a
+JSON-encoded string**. Stringifying first will fail server-side validation.
+
+```jsonc
+// ✅ correct — kindConfig is an object
+"variables": { "kindConfig": { "heading": "...", "image": { "url": "..." } } }
+
+// ❌ wrong — never stringify
+"variables": { "kindConfig": "{\"heading\":\"...\"}" }
+```
+
+### `kindConfig` is REPLACE-only
+
+`kindConfig` is stored as a single blob; `updateSection` overwrites it
+wholesale. To change one field: `getSection` → mutate the object in memory →
+send the **full** updated `kindConfig` back. Never send a partial object.
+
+### Order creation is asynchronous (QueueTicket)
+
+`orderCreate`, `orderCreateGuest`, and `posCreateOrder` return a
+`QueueTicket { ticketId, status, message }`, NOT the created `Order`. The
+actual order is produced asynchronously by the queue worker. Either listen
+on Socket.IO for the ticket result or poll `orderById` once the ticket
+finishes. Tell the user "Order submitted, processing…" instead of pretending
+it's done.
+
+### Telegram-bot prerequisite
+
+`createBroadcast`, `sendDirectMessage`, `createReportGroup` (and the
+notifications they fan out) require the shop to have an active Telegram bot
+already configured. Check `shopId(shopId).activationStatus.telegramBot`
+first — if `false`, prompt the user to wire the bot via `botCreate` before
+attempting any push.
+
+### Discount engine — best-saving wins by default
+
+Multiple eligible discount rules in the same scope (`LINE_ITEM` / `TOTAL_CART` /
+`SHIPPING`) compete and the largest saving wins. Merchant overrides:
+- `forceApply: true` — this rule always wins in its scope (not allowed on `BUY_X_GET_Y`).
+- `exclusionGroupId: "<string>"` — at most one rule per `(shopId, exclusionGroupId)` fires per cart, resolved by `priority` ascending.
+- `exclusiveWithBxgy: true` on a non-BXGY rule — suppress this rule whenever any BXGY rule fires on the same order.
+
+See `admin/discounts.md` for the full semantics before authoring any rule.
+
+### Wire-format casing
+
+- **GraphQL enums on the wire are SCREAMING_SNAKE_CASE** (`PUBLISHED`,
+  `GRID_2`, `HERO_EDITORIAL`, `DATE_DESC`, `PRODUCTS`).
+- **`kindConfig` JSON fields are camelCase** (`headingAccent`, `leftProductId`, `textColor`).
+- **Sub-input objects in regular GraphQL inputs are camelCase** (`priceRange.from`, `socialProof.countLabel`, `comboComponents[].productId`).
 
 ### ⚠️ Destructive Operations — ALWAYS Require Confirmation
 
@@ -222,16 +305,18 @@ Show a summary of what will be affected, then ask "Are you sure? Reply Yes to co
 | `deleteBrand` | Deletes a brand (products lose brand) | catalog/brands.md |
 | `setOrderStatus(CANCELLED)` | Cancels an order (triggers stock reversal) | orders/lifecycle.md |
 | `cancelOrder` | Rich cancellation (CancelledBy + CancelReason + note); triggers stock reversal | orders/lifecycle.md |
-| `productSetArchived(archived: true)` via `setComboConfig(isCombo: false)` | Turns a combo back into a normal product (forgets components) | catalog/products.md |
 | `createBroadcast` | Pushes a Telegram message to EVERY customer of the shop | admin/broadcasts.md |
 | `sendDirectMessage` | One-to-one Telegram push to a customer | admin/broadcasts.md |
 | `deleteReportGroup` | Removes the bot's link to a Telegram report group | admin/broadcasts.md |
+| `botRemove` | Disconnects the shop's Telegram bot | admin/shop.md |
 | `printingDeprovisionTenant` | Wipes the entire printing setup (providers + printers) | admin/printing.md |
 | `printingRemoveProvider` | Deletes a provider and cascades to its printers | admin/printing.md |
 | `printingRemovePrinter` | Removes a printer | admin/printing.md |
 | `printingClearJobHistory` | Bulk-deletes completed/failed/cancelled print jobs | admin/printing.md |
 | `printingDeleteAutoPrintConfig` | Disables auto-print (back to manual jobs) | admin/printing.md |
 | `setEntityType` | Flips the shop's legal entity type (changes receipt formatting) | admin/shop.md |
+| `deleteEvent` | Deletes a ticketed event | advanced/content.md |
+| `deletePost` | Deletes a blog post | advanced/content.md |
 | `deleteInventoryLocation` | Deletes a warehouse/store location | inventory/locations.md |
 | `shopRoleDelete` | Deletes a staff role | admin/team.md |
 | `shopMemberRemove` | Removes a team member from the shop | admin/team.md |
@@ -240,39 +325,48 @@ Show a summary of what will be affected, then ask "Are you sure? Reply Yes to co
 | `deleteDiscountRule` | Deletes a discount rule | admin/discounts.md |
 | `deleteSection` | Deletes a storefront section | admin/sections.md |
 | `resetShopLayout` | Resets all layout customizations (header, footer, about, blog) to defaults | admin/shop-layout.md |
+| `resetTheme` | Resets theme (colors, radius, fonts) to defaults | admin/appearance.md |
 | `deleteDesign` | Deletes a canvas design | admin/sections.md |
 | `deleteTeir` | Deletes a membership tier | advanced/membership.md |
 | `deleteMembership` | Revokes a user's membership | advanced/membership.md |
 | `deleteDns` | Removes custom domain | advanced/dns.md |
 | `pluginUninstall` | Uninstalls a plugin | advanced/plugins.md |
+| `terminateAgreement` | Terminates a consignment agreement | advanced (not yet documented) |
+| `shopTransfer` | Hands shop ownership to another user | admin/shop.md |
 | `shopActivate(active: false)` | Deactivates a shop (storefront goes offline) | superadmin/shops.md |
 | `userSetActive(active: false)` | Freezes a user (loses all access) | superadmin/users.md |
 | `deleteBusinessCategory` | Deletes a platform business category | superadmin/business-categories.md |
 
 ### Bootstrap Query (run first in every session)
 
-**Before running any query**, pull the latest skill files to ensure you have up-to-date API docs:
+**Before running any query**, if you have a local clone of the skill repo,
+pull the latest skill files (the repo path varies by deployment):
 
 ```bash
-cd /home/jiren/projects/organizations/migration/riverbase/koompi-biz-skill && git pull origin main 2>/dev/null || true
+# If you have a local clone at $KOOMPI_BIZ_SKILL, refresh it:
+git -C "${KOOMPI_BIZ_SKILL:-/path/to/koompi-biz-skill}" pull origin master 2>/dev/null || true
 ```
 
-Then run the bootstrap query:
+Then run the bootstrap query — gives you the caller identity, the shops they
+own, and the shops they're a staff member of in one round-trip:
+
 ```graphql
 query Bootstrap {
+  me {
+    id role tgUsername tgFirstname tgLastname active
+  }
   ownedShops {
-    id
-    name
-    logo
-    active
-    productsCount
+    id name logo active productsCount
+    activationStatus { shopLocation paymentConnection telegramBot }
     modules { shopping stocking quoting codPayment posCodEnabled cartMode }
   }
   joinedShops {
-    id
-    name
-    logo
-    active
+    id name logo active
   }
 }
 ```
+
+Why this shape:
+- `me.role` tells you whether `superadmin/*` files are usable (`role: "admin"`).
+- `activationStatus.telegramBot` gates the broadcasts / DMs / report-groups skills.
+- `modules` flags which feature areas the shop has turned on (POS, stocking, quoting, COD).
