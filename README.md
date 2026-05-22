@@ -21,6 +21,10 @@ Give the agent a JWT token and a shop ID, and it can:
 - **Customize shop layout: header, footer, about page, and blog layout**
 - **Section Explorer: build storefront homepages with 20+ section kinds (hero, promo mosaic, FAQ, testimonials, countdown, video, etc.) — each with per-section background, text color, and draft/published lifecycle**
 - **Discount engine: line-item / cart / shipping / BXGY rules, plus merchant overrides (`forceApply`, `exclusionGroupId`, `exclusiveWithBxgy`) and per-customer caps**
+- **Combo / bundle products** with optional per-component discounting
+- **Shade Finder** (cosmetics try-on) — map product variants to shades over lips / eyes / lashes / cheeks / foundation
+- **Telegram broadcasts + DMs + owner report groups** for shop comms
+- **Receipt printing**: multi-tenant RabbitMQ pipeline, providers + printers, per-printer paper/font/margin configuration, auto-print rules, manual job control
 - **CMS: create and publish blog posts with customizable blog page layouts**
 - Run a loyalty/membership program
 - Send contract quotations
@@ -59,6 +63,8 @@ skills/
     seo.md                        ← Meta title, description, favicon, og image
     customer-auth.md              ← Customer login, Telegram auth
     customer-service-agent.md     ← Build customer-facing CS bots
+    broadcasts.md                 ← Telegram broadcasts, DMs, owner report groups
+    printing.md                   ← Receipt printer setup, auto-print rules, print jobs
   advanced/
     membership.md                 ← VIP tiers & membership cards
     quotations.md                 ← Contract quotations & revisions

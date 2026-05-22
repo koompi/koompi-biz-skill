@@ -42,13 +42,43 @@ mutation ForceReceive($orderId: String!, $shopId: String!) {
 ```
 
 ## Set Order Status (direct override)
-Use when you need to manually change status (e.g., cancel).
+Use when you need to manually change status (e.g., revert PENDING → CONFIRMED).
+For cancellation prefer **`cancelOrder`** below — it captures who cancelled
+and why, which is what the receipt + dashboard show.
 ```graphql
 mutation SetOrderStatus($shopId: String!, $orderId: String!, $status: OrderStatus!) {
   setOrderStatus(shopId: $shopId, orderId: $orderId, status: $status) { id }
 }
 ```
 `OrderStatus`: `PENDING | CONFIRMED | COMPLETED | CANCELLED`
+
+## Cancel Order (with reason)
+> ⚠️ **CONFIRMATION REQUIRED** — show order id, items, total, and the reason
+> before calling. Wait for explicit "Yes". Triggers stock reversal if the
+> order had been confirmed.
+
+```graphql
+mutation CancelOrder(
+  $shopId: String!
+  $orderId: String!
+  $cancelledBy: CancelledBy!
+  $reason: CancelReason!
+  $note: String
+) {
+  cancelOrder(
+    shopId: $shopId
+    orderId: $orderId
+    cancelledBy: $cancelledBy
+    reason: $reason
+    note: $note
+  ) {
+    id orderStatus paymentStatus
+  }
+}
+```
+- `CancelledBy`: `ADMIN | CUSTOMER | SYSTEM`
+- `CancelReason`: `OUT_OF_STOCK | CUSTOMER_CHANGED_MIND | DUPLICATE_ORDER | CANT_DELIVER | SUSPICIOUS_ORDER | PAYMENT_PROBLEM | OTHER`
+- `note`: free-form extra context (required if `reason: OTHER`).
 
 ## Set Delivery Status
 ```graphql

@@ -107,6 +107,8 @@ Load **only** the file relevant to the user's request:
 | [admin/appearance.md](skills/admin/appearance.md) | "change theme", "custom colors", "shop appearance", "upload font", "change font", "border radius", "dark mode", "branding", "reset theme" |
 | [admin/customer-auth.md](skills/admin/customer-auth.md) | "customer login", "telegram auth", "user token", "initData", "connect account", "register user", "customer JWT" |
 | [admin/customer-service-agent.md](skills/admin/customer-service-agent.md) | "build CS bot", "customer service agent", "shop bot", "telegram bot for customers", "AI assistant for shop", "OpenClaw agent" |
+| [admin/broadcasts.md](skills/admin/broadcasts.md) | "broadcast", "blast", "send to all customers", "direct message", "DM customer", "abandoned cart message", "report group", "telegram group", "owner notifications" |
+| [admin/printing.md](skills/admin/printing.md) | "printer", "receipt printer", "auto print", "print job", "thermal printer", "configure printer", "test print", "provision printing", "RabbitMQ printer" |
 
 ### Advanced Features
 | File | Use when user says… |
@@ -219,6 +221,17 @@ Show a summary of what will be affected, then ask "Are you sure? Reply Yes to co
 | `deletePage` | Deletes a custom page (URL will 404) | admin/pages.md |
 | `deleteBrand` | Deletes a brand (products lose brand) | catalog/brands.md |
 | `setOrderStatus(CANCELLED)` | Cancels an order (triggers stock reversal) | orders/lifecycle.md |
+| `cancelOrder` | Rich cancellation (CancelledBy + CancelReason + note); triggers stock reversal | orders/lifecycle.md |
+| `productSetArchived(archived: true)` via `setComboConfig(isCombo: false)` | Turns a combo back into a normal product (forgets components) | catalog/products.md |
+| `createBroadcast` | Pushes a Telegram message to EVERY customer of the shop | admin/broadcasts.md |
+| `sendDirectMessage` | One-to-one Telegram push to a customer | admin/broadcasts.md |
+| `deleteReportGroup` | Removes the bot's link to a Telegram report group | admin/broadcasts.md |
+| `printingDeprovisionTenant` | Wipes the entire printing setup (providers + printers) | admin/printing.md |
+| `printingRemoveProvider` | Deletes a provider and cascades to its printers | admin/printing.md |
+| `printingRemovePrinter` | Removes a printer | admin/printing.md |
+| `printingClearJobHistory` | Bulk-deletes completed/failed/cancelled print jobs | admin/printing.md |
+| `printingDeleteAutoPrintConfig` | Disables auto-print (back to manual jobs) | admin/printing.md |
+| `setEntityType` | Flips the shop's legal entity type (changes receipt formatting) | admin/shop.md |
 | `deleteInventoryLocation` | Deletes a warehouse/store location | inventory/locations.md |
 | `shopRoleDelete` | Deletes a staff role | admin/team.md |
 | `shopMemberRemove` | Removes a team member from the shop | admin/team.md |

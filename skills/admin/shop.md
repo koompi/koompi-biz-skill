@@ -104,6 +104,25 @@ mutation SetPluginAccess($shopId: String!, $enabled: Boolean!) {
 }
 ```
 
+## Set Business Category
+```graphql
+mutation SetBusinessCategory($shopId: String!, $businessCategoryId: String) {
+  shopSetBusinessCategory(shopId: $shopId, businessCategoryId: $businessCategoryId)
+}
+```
+Pass `null` to clear. Resolve `businessCategoryId` via the
+superadmin/business-categories skill.
+
+## Set Entity Type (registered legal entity vs not)
+```graphql
+mutation SetEntityType($shopId: String!, $entityType: EntityType!) {
+  setEntityType(shopId: $shopId, entityType: $entityType)
+}
+```
+`EntityType`: `REGISTERED | UNREGISTERED`. Toggles receipt / invoice
+formatting on the storefront. Confirm with the merchant before flipping —
+this affects every order's receipt going forward.
+
 ## List Customers
 ```graphql
 query Customers($shopId: String!) {

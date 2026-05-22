@@ -60,6 +60,19 @@ mutation EnableAba($shopId: String!) {
 }
 ```
 
+## Set Bank Label (per-order, COD / ABA transfer)
+Tags the order with which bank account the customer paid into. Surfaces on
+the receipt + the merchant's payment dashboard.
+
+```graphql
+mutation SetBankLabel($shopId: String!, $orderId: String!, $bankLabel: String) {
+  setBankLabel(shopId: $shopId, orderId: $orderId, bankLabel: $bankLabel) {
+    id
+  }
+}
+```
+- `bankLabel`: free-form string (e.g. `"ABA - 001234567"`). Pass `null` to clear.
+
 ---
 
 ## Agent Notes
