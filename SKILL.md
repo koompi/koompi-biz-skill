@@ -159,25 +159,32 @@ CartMode:        DETAILS_ONLY | FULL_CHECKOUT
 CardStyle:       MINIMAL | BORDERED | OVERLAY | GLASS
 ```
 
-### Section Enums (Section Explorer)
+### Section Enums (Section Explorer) — SCREAMING_SNAKE_CASE on the wire
 ```
-SectionKind:     hero_editorial | hero_immersive | hero_centered_minimal
-                 | grid | slider | horizontal_scroll
-                 | products_editorial_spotlight
-                 | categories_grid | categories_asymmetric_bento
-                 | promo_mosaic | promo_single_banner
-                 | testimonials_cards | testimonials_carousel
-                 | faq_accordion | brand_strip
-                 | image_text | cta_banner | countdown
-                 | rich_text | newsletter | video_hero
-SectionStatus:   draft | published | hidden
-SectionLayout:   Grid1 | Grid2 | Grid3 | Slider | HorizontalScroll
-SectionSpacing:  None | Sm | Md | Lg | Xl | Xxl
-DataSource:      products | events | posts | productCategories | eventCategories | postCategories
-DataType:        Static | Dynamic
-StaticType:      Design | Image
-TitleAlignment:  Left | Center | Right
+SectionKind:     HERO_EDITORIAL | HERO_IMMERSIVE | HERO_CENTERED_MINIMAL
+                 | GRID | SLIDER | HORIZONTAL_SCROLL
+                 | PRODUCTS_EDITORIAL_SPOTLIGHT
+                 | CATEGORIES_GRID | CATEGORIES_ASYMMETRIC_BENTO
+                 | PROMO_MOSAIC | PROMO_SINGLE_BANNER
+                 | TESTIMONIALS_CARDS | TESTIMONIALS_CAROUSEL
+                 | FAQ_ACCORDION | BRAND_STRIP
+                 | IMAGE_TEXT | CTA_BANNER | COUNTDOWN
+                 | RICH_TEXT | NEWSLETTER | VIDEO_HERO
+SectionStatus:   DRAFT | PUBLISHED | HIDDEN
+SectionLayout:   GRID_1 | GRID_2 | GRID_3 | SLIDER | HORIZONTAL_SCROLL
+SectionSpacing:  NONE | SM | MD | LG | XL | XXL
+DataSource:      PRODUCTS | EVENTS | POSTS
+                 | PRODUCT_CATEGORIES | EVENT_CATEGORIES | POST_CATEGORIES
+DataType:        STATIC | DYNAMIC
+StaticType:      IMAGE | DESIGN
+TitleAlignment:  LEFT | CENTER | RIGHT
+SortOption:      NAME_ASC | NAME_DESC | PRICE_ASC | PRICE_DESC | DATE_ASC | DATE_DESC
+FilterType:      PRICE_RANGE | CATEGORIES | SUB_CATEGORIES | BRANDS | ITEMS
+                 | PROMOTIONS | NONE | MULTI
 ```
+> **Note:** the JSON inside `kindConfig` uses **camelCase** field names
+> (`headingAccent`, `leftProductId`, `textColor`, etc.). Only the top-level
+> GraphQL enums are SCREAMING_SNAKE_CASE.
 
 ### Discount Enums
 ```
