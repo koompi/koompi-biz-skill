@@ -74,17 +74,31 @@ mutation CreateProduct(
   $brandId: String
   $subCategories: [String!]
   $detail: String
+  $weightKg: Float        # measurement fields, all optional
+  $lengthCm: Float
+  $widthCm: Float
+  $heightCm: Float
+  $unit: String           # free-form selling unit: "kg", "ml", "L", "piece", "pack of 6", …
 ) {
   productCreate(
     shopId: $shopId name: $name price: $price description: $description
     images: $images options: $options tags: $tags category: $category
     isPreorder: $isPreorder preorderDeposit: $preorderDeposit
     brandId: $brandId subCategories: $subCategories detail: $detail
+    weightKg: $weightKg lengthCm: $lengthCm widthCm: $widthCm heightCm: $heightCm
+    unit: $unit
   ) {
-    id name price
+    id name price unit
   }
 }
 ```
+
+### Measurement & selling unit
+- `weightKg`, `lengthCm`, `widthCm`, `heightCm` — physical dimensions used
+  by `DISTANCE_BASED` shipping calculation and the receipt template.
+- `unit` — free-form string for how the product is sold (`"kg"`, `"ml"`,
+  `"L"`, `"piece"`, `"pack of 6"`, `"bottle"`). Surfaces on the product card
+  and receipt next to the price. Null/empty means "per item" (no suffix).
 
 ### ProductOptionsInput (non-stock options like "Sugar Level")
 ```json
@@ -101,13 +115,17 @@ mutation ProductUpdate(
   $options: [ProductOptionsUpdateInput!]!
   $tags: [String!] $category: String $isPreorder: Boolean!
   $preorderDeposit: String $brandId: String $subCategories: [String!] $detail: String
+  $weightKg: Float $lengthCm: Float $widthCm: Float $heightCm: Float
+  $unit: String
 ) {
   productUpdate(
     shopId: $shopId productId: $productId name: $name price: $price
     description: $description images: $images options: $options tags: $tags
     category: $category isPreorder: $isPreorder preorderDeposit: $preorderDeposit
     brandId: $brandId subCategories: $subCategories detail: $detail
-  ) { id name price }
+    weightKg: $weightKg lengthCm: $lengthCm widthCm: $widthCm heightCm: $heightCm
+    unit: $unit
+  ) { id name price unit }
 }
 ```
 **ProductOptionsUpdateInput** includes `_id` for existing options: `{ "_id": "abc", "name": "Size", "values": [{ "_id": "v1", "name": "S" }] }`.

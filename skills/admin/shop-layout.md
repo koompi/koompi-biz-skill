@@ -75,9 +75,21 @@ query GetShopLayout($shopId: String!) {
       heroSubtitle
       blocks { blockType order props visible }
     }
+    # New surfaces (see sections below)
+    look { lookId brandColor fontPair density }
+    announcement { enabled kind config }
+    notFoundTemplateId
+    publishedVersions { lookId brandColor fontPair density savedAt }
   }
 }
 ```
+
+> **Wire-format reminder.** GraphQL enums on the wire are SCREAMING_SNAKE_CASE
+> (`SETTLED`, `GRID_2`), but the **Look / Announcement / Density / FontPair
+> enums use snake_case** (`classic`, `serif_sans`, `comfortable`,
+> `classic_promo_socials`). That's because `#[graphql(rename_items =
+> "snake_case")]` is set on those Rust enums to match the storage tag. JSON
+> config blobs (announcement `config`) are camelCase.
 
 ---
 
@@ -549,6 +561,224 @@ mutation UpdateShopLayout($shopId: String!, $header: JSON!, $footer: JSON!) {
 
 ---
 
+## Looks (top-level coordinated visual identity) ⭐ NEW
+
+A **Look** is a single merchant decision that atomically sets three surface
+template IDs (header layout, footer layout, announcement template) plus
+brand-token knobs (color, font pair, density). Picking a Look is one click —
+the storefront chrome reads as one coherent design instead of three
+independently-chosen ones.
+
+### `LookId` catalog (8 looks)
+```
+classic     weyoung     atelier     editorial
+marketplace maison      flagship    studio
+```
+
+Each Look maps to a canonical `(header.layout, footer.layout, announcement.kind)`
+triple via `look_templates(...)` on the backend. Picking a Look cascades
+those three fields onto `ShopLayout`. Announcement `enabled` + `config` stay
+under the merchant's control (use `updateShopAnnouncement` for those).
+
+### Knobs riding alongside the Look
+```
+FontPair: sans | serif_sans | slab_sans | mono_sans | serif_serif
+Density:  compact | comfortable | spacious
+```
+- `brandColor`: Hex (`"#0a0a0a"`) → CSS `--brand-color`. Null = use the
+  Look's default accent.
+- `fontPair`: drives `--font-display` / `--font-body` stacks on the storefront.
+- `density`: drives `--space-scale` (every section's padding/gap inherits).
+
+### Apply a Look
+```graphql
+mutation SetShopLook(
+  $shopId: String!
+  $lookId: LookId!
+  $brandColor: String
+  $fontPair: FontPair
+  $density: Density
+) {
+  setShopLook(
+    shopId: $shopId
+    lookId: $lookId
+    brandColor: $brandColor
+    fontPair: $fontPair
+    density: $density
+  ) {
+    id shopId
+    look { lookId brandColor fontPair density }
+    header { layout }
+    footer { layout }
+    announcement { enabled kind }
+  }
+}
+```
+- Before applying, the backend snapshots the current look into
+  `publishedVersions` (newest-first, max 5 — older snapshots fall off).
+  This is what powers Revert.
+
+### Revert to a prior Look
+```graphql
+mutation RevertShopLook($shopId: String!, $versionIndex: Int!) {
+  revertShopLook(shopId: $shopId, versionIndex: $versionIndex) {
+    id look { lookId brandColor fontPair density }
+  }
+}
+```
+`versionIndex` is 0-based against the newest-first `publishedVersions` array.
+`0` = "undo the last apply"; `1` = "undo two applies ago"; etc.
+
+### Read the saved Look state
+```graphql
+query Look($shopId: String!) {
+  getShopLayout(shopId: $shopId) {
+    look { lookId brandColor fontPair density }
+    publishedVersions {
+      lookId brandColor fontPair density savedAt
+    }
+  }
+}
+```
+
+### Recipe — "Make my shop look like an art-gallery / Atelier"
+```json
+{
+  "shopId": "...",
+  "lookId": "atelier",
+  "brandColor": "#1a1a1a",
+  "fontPair": "serif_sans",
+  "density": "spacious"
+}
+```
+
+---
+
+## Announcement Bar ⭐ NEW
+
+Separate "first-class" surface alongside header / footer. Toggle it on,
+pick a template, fill in the per-template config.
+
+### Template kinds + per-template `config` shape
+
+```
+AnnouncementTemplateKind:
+  classic_promo_socials | classic_centered_minimal
+  classic_editorial_dark | weyoung
+```
+
+**`classic_promo_socials`** — line of text aligned left/center + optional
+right-side social icons.
+```json
+{
+  "text": "Free shipping on orders over $50",
+  "fallbackText": "Riverbase — your neighborhood shop",
+  "alignment": "left",
+  "theme": "primary",
+  "bgColor": null,
+  "textColor": null,
+  "extras": [
+    { "label": "Telegram", "href": "https://t.me/...", "icon": "telegram" },
+    { "label": "Instagram", "href": "...", "icon": "instagram" }
+  ]
+}
+```
+`alignment`: `"left" | "center"` (`extras` hidden when `center`).
+`theme`: `"primary" | "dark" | "custom"` (only `custom` honors `bgColor` / `textColor`).
+
+**`classic_centered_minimal`** — centered icon + message + optional pill CTA + dismiss "X".
+```json
+{
+  "text": "Friends & Family weekend — 20% off",
+  "ctaLabel": "Shop the sale",
+  "ctaHref": "/promotions",
+  "bgColor": "#18181b",
+  "textColor": "#fafafa"
+}
+```
+
+**`classic_editorial_dark`** (Sale Countdown) — headline + subtitle + ISO
+target date + buy-now CTA.
+```json
+{
+  "text": "SPRING DROP",
+  "subtitle": "Final hours",
+  "endDate": "2026-12-31T23:59:00Z",
+  "ctaLabel": "Buy now",
+  "ctaHref": "/shop",
+  "showDays": true
+}
+```
+
+**`weyoung`** — short centered copy on the brand primary color.
+```json
+{
+  "text": "Just in — Spring collection",
+  "bgColor": null,
+  "textColor": null
+}
+```
+
+### Update the announcement surface
+```graphql
+mutation UpdateShopAnnouncement(
+  $shopId: String!
+  $enabled: Boolean!
+  $kind: AnnouncementTemplateKind
+  $config: JSON
+) {
+  updateShopAnnouncement(
+    shopId: $shopId
+    enabled: $enabled
+    kind: $kind
+    config: $config
+  ) {
+    announcement { enabled kind }
+  }
+}
+```
+- `enabled: false` hides the bar regardless of `kind` / `config`.
+- `kind: null` clears the picked template.
+- `config` is the **inner config object** (just `{ text, ctaLabel, ... }`),
+  not the tagged envelope — the server wraps it. Shape varies by `kind`
+  (see above).
+
+### Read announcement state
+```graphql
+query Ann($shopId: String!) {
+  getShopLayout(shopId: $shopId) {
+    announcement {
+      enabled kind config   # config is a JSON scalar
+    }
+  }
+}
+```
+
+---
+
+## Storefront 404 page ⭐ NEW
+
+Pick which template the storefront renders for the not-found route.
+
+```graphql
+mutation UpdateShopNotFoundTemplate($shopId: String!, $templateId: String) {
+  updateShopNotFoundTemplate(shopId: $shopId, templateId: $templateId) {
+    notFoundTemplateId
+  }
+}
+```
+- `templateId`: `"simple"` | `"illustrated"` | `"bold"` | `null`.
+- `null` clears the override → storefront falls back to its built-in default.
+
+### Read it
+```graphql
+query NotFound($shopId: String!) {
+  getShopLayout(shopId: $shopId) { notFoundTemplateId }
+}
+```
+
+---
+
 ## Reset Shop Layout
 
 Resets all layout configuration (header, footer, about page, blog layout) to platform defaults.
@@ -586,11 +816,20 @@ Currently `blocks` is typically empty (`[]`) — reserved for future extensibili
 
 ## Agent Notes
 
-- **🔄 Keep skill files updated** — Before using this skill, run `git pull` in the skill directory to ensure you have the latest API docs and field definitions:
+- **🔄 Keep skill files updated** — Before using this skill, if you have a
+  local clone of the skill repo, pull the latest:
   ```bash
-  cd /home/jiren/projects/organizations/migration/riverbase/koompi-biz-skill && git pull origin main 2>/dev/null || true
+  git -C "${KOOMPI_BIZ_SKILL:-/path/to/koompi-biz-skill}" pull origin master 2>/dev/null || true
   ```
-  New fields (like `enabled`, `bg_style`, `link_style`) are added frequently — a stale skill file will cause you to miss required fields.
+  New fields (like `enabled`, `bg_style`, `link_style`, the Look system, the
+  announcement surface, `notFoundTemplateId`) are added frequently — a
+  stale skill file will cause you to miss required fields.
+- **Two paths to the same chrome** — `setShopLook` is the "one-click brand
+  identity" path (cascades onto header/footer/announcement). The
+  `updateShopHeader` / `updateShopFooter` / `updateShopAnnouncement`
+  mutations are the "fine-tune individual surface" path. Use Looks first
+  for new shops; fall back to per-surface edits when the merchant wants
+  bespoke control.
 - **⚠️ `enabled: true` is REQUIRED** — Header and footer are **disabled by default**. Every `updateShopHeader` or `updateShopFooter` mutation **MUST include `"enabled": true`** in the JSON payload, or the storefront will hide the header/footer. If you are setting up or modifying a header or footer, always include this field. Example: `{ "enabled": true, "layout": "classic", ... }`.
 - **Style customization** — Header and footer support visual styling:
   - **Header `bg_style`**: `"transparent"` (default), `"solid"`, `"blurred"`, `"custom"`. When `"custom"`, also set `bg_color` (hex like `"#1a1a2e"`) and `text_color` (hex like `"#ffffff"`).

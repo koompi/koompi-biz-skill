@@ -5,6 +5,8 @@
 query ShopMetadata($shopId: String!) {
   shopId(shopId: $shopId) {
     id name logo ownerId active productsCount preliminaryLocation
+    footerLogo showNameInNavbar showNameInFooter
+    entityType
     businessCatories { name }
     modules { shopping stocking quoting cartMode cardStyle codPayment posCodEnabled announcement showProductFilter }
     owner { id name phone tgUsername tgFirstname tgLastname }
@@ -40,6 +42,56 @@ Upload image first via `POST /uploads/s3` (see SKILL.md for details), then:
 mutation UpdateLogo($shopId: String!, $logo: String!) {
   shopUpdateLogo(shopId: $shopId, logo: $logo) { id logo }
 }
+```
+
+## Update Branding (footer logo, navbar/footer name visibility)
+
+Patch any of:
+- `footerLogo` — optional separate logo for the footer (CDN URL). Empty
+  string clears it; the footer falls back to the main `logo`.
+- `showNameInNavbar` — show the shop name as text next to the logo in the
+  navbar/header.
+- `showNameInFooter` — show the shop name as text in the footer.
+
+```graphql
+mutation UpdateBranding(
+  $shopId: String!
+  $footerLogo: String
+  $showNameInNavbar: Boolean
+  $showNameInFooter: Boolean
+) {
+  shopUpdateBranding(
+    shopId: $shopId
+    footerLogo: $footerLogo
+    showNameInNavbar: $showNameInNavbar
+    showNameInFooter: $showNameInFooter
+  ) {
+    id footerLogo showNameInNavbar showNameInFooter
+  }
+}
+```
+Both `showNameInNavbar` and `showNameInFooter` default to `true` for new
+shops — the toggle exists so merchants can hide them when they have a
+wordmark logo and don't want duplicated text.
+
+### Recipe — "Use a wordmark logo, hide the redundant shop name"
+```json
+{
+  "shopId": "...",
+  "showNameInNavbar": false,
+  "showNameInFooter": false
+}
+```
+
+### Recipe — "Different darker logo in the footer"
+1. Upload via `POST /uploads/s3` (or `/hq` for high-res) → returns CDN URL.
+2. ```json
+   { "shopId": "...", "footerLogo": "https://cdn.riverbase.org/<uuid>.webp" }
+   ```
+
+### Recipe — "Clear the footer-logo override"
+```json
+{ "shopId": "...", "footerLogo": "" }
 ```
 
 ## Activate / Deactivate Shop

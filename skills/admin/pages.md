@@ -1,8 +1,36 @@
 # Custom Pages
 
-Create and manage custom content pages (About, Terms, Privacy, Contact, FAQ, etc.) for the shop's storefront.
+Create and manage custom content pages (Terms, Privacy, Contact, FAQ, Shipping, etc.) for the shop's storefront.
+
+Pages support **two render modes**:
+- **`"rich"` (default)** — the `content` field is a JSON array of themed
+  blocks (hero / columns / features / callouts / heading / paragraph / etc.).
+  Rendered inline in the storefront — sanitized, mobile-responsive, inherits
+  the shop's theme. Use for almost every page.
+- **`"html"` (static page)** — the `customHtml` field is a complete
+  merchant-authored HTML document. Rendered ONLY inside a sandboxed
+  `<iframe>` so its scripts cannot reach customer data. Use only when the
+  merchant insists on pixel-perfect custom HTML.
 
 > **Note**: The Pages RPC service must be running. If queries return "Failed to connect to RPC_PAGE", the service may be down.
+
+## Reserved slugs (the backend rejects these)
+
+The following slugs collide with literal storefront route folders — saving a
+page with one of them would persist but never render, so the backend rejects
+the create / update outright. Pick a different slug.
+
+```
+about           blog            checkout        events          frozen
+login           notifications   orders          pages           posts
+products        profile         promotions      quotes          receipts
+search          sections        try-on          vip
+```
+
+> The `about` page is owned by Layout Settings (see `admin/shop-layout.md`
+> → `updateShopAboutPage`), not by this skill. The backend returns a
+> specific error pointing the agent there if you try to create a page
+> with `slug: "about"`.
 
 ## List All Pages
 
@@ -10,6 +38,7 @@ Create and manage custom content pages (About, Terms, Privacy, Contact, FAQ, etc
 query ListPages($shopId: String!) {
   getPages(shopId: $shopId) {
     id slug title status showInHeader showInFooter displayOrder coverImage
+    renderMode customHtml
     seo { metaTitle metaDescription }
     createdAt updatedAt
   }
@@ -22,6 +51,7 @@ query ListPages($shopId: String!) {
 query PublishedPages($shopId: String!) {
   getPublishedPages(shopId: $shopId) {
     id slug title status showInHeader showInFooter displayOrder coverImage
+    renderMode customHtml
     seo { metaTitle metaDescription }
   }
 }
@@ -33,6 +63,7 @@ query PublishedPages($shopId: String!) {
 query PageBySlug($shopId: String!, $slug: String!) {
   getPageBySlug(shopId: $shopId, slug: $slug) {
     id slug title content status coverImage showInHeader showInFooter displayOrder
+    renderMode customHtml
     seo { metaTitle metaDescription }
   }
 }
@@ -44,6 +75,7 @@ query PageBySlug($shopId: String!, $slug: String!) {
 query PageById($pageId: String!) {
   getPage(pageId: $pageId) {
     id slug title content status coverImage showInHeader showInFooter displayOrder
+    renderMode customHtml
     seo { metaTitle metaDescription }
   }
 }
@@ -63,6 +95,8 @@ mutation CreatePage(
   $showInFooter: Boolean
   $displayOrder: Int
   $seo: String
+  $renderMode: String
+  $customHtml: String
 ) {
   createPage(
     shopId: $shopId
@@ -75,23 +109,33 @@ mutation CreatePage(
     showInFooter: $showInFooter
     displayOrder: $displayOrder
     seo: $seo
-  ) { id slug title status }
+    renderMode: $renderMode
+    customHtml: $customHtml
+  )
 }
 ```
+
+Returns `Boolean` (`true` on success).
 
 ### Parameters
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `slug` | String | ✅ | URL path: `"about"`, `"terms"`, `"contact"` — must be unique, lowercase, no spaces |
-| `title` | String | ✅ | Page heading: `"About Us"`, `"Terms & Conditions"` |
-| `content` | String | ✅ | Page body content — **JSON array of blocks** (see Rich Content Blocks below) or raw HTML fallback |
+| `slug` | String | ✅ | URL path: `"terms"`, `"contact"`, `"faq"` — must be unique, lowercase, no spaces. **Must not be a reserved slug** (see list above). |
+| `title` | String | ✅ | Page heading: `"Terms & Conditions"`, `"Contact Us"` |
+| `content` | String | ✅ | Page body — **JSON-string of a block array** for `renderMode: "rich"`. Pass `"[]"` when `renderMode: "html"` (the field is required but unused). |
 | `status` | String | ✅ | `"published"` or `"draft"` |
 | `coverImage` | String | ❌ | Hero/banner image (CDN URL from `/uploads/s3`) |
 | `showInHeader` | Boolean | ❌ | Show in header navigation dropdown |
 | `showInFooter` | Boolean | ❌ | Show in footer links |
 | `displayOrder` | Int | ❌ | Sort order for header/footer (lower = first) |
 | `seo` | String | ❌ | JSON string: `{"metaTitle":"...", "metaDescription":"..."}` |
+| `renderMode` | String | ❌ | `"rich"` (default) or `"html"`. Selects which body field the storefront renders. |
+| `customHtml` | String | ❌ | Full HTML document body. **Required when `renderMode: "html"`**; ignored otherwise. Rendered ONLY inside a sandboxed iframe — its scripts cannot reach customer data, localStorage, or the parent storefront's DOM. |
+
+### Auth
+Any shop **owner or staff member** can call `createPage` / `updatePage` /
+`deletePage` — no special `Action::Page*` permission is required.
 
 ### Example: Create a Rich About Page (recommended)
 
@@ -139,19 +183,53 @@ Use JSON block array for rich layouts:
 }
 ```
 
-### Legacy Example: Simple HTML content (still works)
+### Legacy Example: Simple HTML inside a rich block (still works)
+
+You can still pass a single `html` rich-block when the merchant only has a
+short snippet:
 
 ```json
 {
   "shopId": "SHOP_ID",
   "slug": "terms",
   "title": "Terms & Conditions",
-  "content": "<h2>Terms & Conditions</h2><p>Last updated: April 2026</p><p>By using this website, you agree to these terms...</p>",
+  "content": "[{\"type\":\"html\",\"html\":\"<h2>Terms & Conditions</h2><p>Last updated: April 2026</p><p>By using this website, you agree to these terms...</p>\"}]",
   "status": "published",
   "showInFooter": true,
   "displayOrder": 4
 }
 ```
+
+### Static-page (`renderMode: "html"`) — pixel-perfect custom HTML
+
+When the merchant wants a fully hand-coded page (custom CSS / fonts /
+animations that the rich block system doesn't expose), set
+`renderMode: "html"` and put a complete HTML document in `customHtml`. The
+storefront renders it inside a sandboxed iframe — the document is isolated
+from the rest of the storefront and **cannot access** customer data,
+localStorage, cookies, or the parent DOM.
+
+```json
+{
+  "shopId": "SHOP_ID",
+  "slug": "showcase",
+  "title": "Showcase",
+  "content": "[]",
+  "renderMode": "html",
+  "customHtml": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>body{margin:0;font-family:system-ui;background:#0f0f0f;color:#fff;}.hero{padding:80px 24px;text-align:center;}h1{font-size:48px;margin:0 0 12px}p{opacity:.7;max-width:540px;margin:0 auto}</style></head><body><section class=\"hero\"><h1>Spring drop</h1><p>A capsule of timeless essentials, hand-finished.</p></section></body></html>",
+  "status": "published",
+  "showInHeader": false,
+  "showInFooter": true,
+  "displayOrder": 9
+}
+```
+
+Required: `content` is still required by the schema — pass `"[]"`. The
+storefront ignores it when `renderMode` is `"html"`.
+
+> Don't mix modes. A page is *either* `"rich"` *or* `"html"`. Switching modes
+> on `updatePage` will toggle which body the storefront renders — the
+> unused field is preserved on the document but not shown.
 
 ## Update Page
 
@@ -159,15 +237,17 @@ Use JSON block array for rich layouts:
 mutation UpdatePage(
   $shopId: String!
   $pageId: String!
-  $slug: String!
-  $title: String!
-  $content: String!
+  $slug: String
+  $title: String
+  $content: String
   $coverImage: String
   $status: String
   $showInHeader: Boolean
   $showInFooter: Boolean
   $displayOrder: Int
   $seo: String
+  $renderMode: String
+  $customHtml: String
 ) {
   updatePage(
     shopId: $shopId
@@ -181,18 +261,44 @@ mutation UpdatePage(
     showInFooter: $showInFooter
     displayOrder: $displayOrder
     seo: $seo
-  ) { id slug title status }
+    renderMode: $renderMode
+    customHtml: $customHtml
+  )
 }
 ```
 
-> **Important**: All fields are required in the mutation, but you should fetch the current page first and preserve unchanged fields.
+Every field except `shopId` and `pageId` is **optional** — pass only the
+fields you want to change.
+
+### Empty-string clears `coverImage` and `seo`
+
+- `coverImage: ""` → clears the cover image (sets it to null).
+- `seo: ""` → clears the entire SEO object.
+- Non-empty strings replace the stored value.
+
+### Rename → reserved slug is rejected
+If `slug` is being changed to one of the reserved slugs, the mutation fails
+with the same error as `createPage`. Pick a different slug.
 
 ### Workflow: Update Existing Page
 
-1. **Fetch** — Get current page via `getPage(pageId: $pageId)`
-2. **Modify** — Change only the fields the user requested, keep the rest
-3. **Save** — Call `updatePage` with all fields (modified + preserved)
-4. **Verify** — Re-fetch to confirm
+1. **Fetch** — Get current page via `getPage(pageId: $pageId)`.
+2. **Modify** — Build a `variables` object with **only the fields you want to
+   change**. Leave the rest off — they'll keep their stored values.
+3. **Save** — Call `updatePage` with that partial variables object.
+4. **Verify** — Re-fetch to confirm.
+
+### Common update flows
+
+| Goal | Send |
+|---|---|
+| Toggle from draft to published | `{ shopId, pageId, status: "published" }` |
+| Change the cover image | upload via `/uploads/s3` → `{ shopId, pageId, coverImage: "<new url>" }` |
+| Remove the cover image | `{ shopId, pageId, coverImage: "" }` |
+| Update SEO only | `{ shopId, pageId, seo: "{\"metaTitle\":\"...\",\"metaDescription\":\"...\"}" }` |
+| Clear SEO | `{ shopId, pageId, seo: "" }` |
+| Switch a rich page to static HTML | `{ shopId, pageId, renderMode: "html", customHtml: "<!DOCTYPE html>…" }` |
+| Switch back to rich | `{ shopId, pageId, renderMode: "rich" }` (the previously-saved `content` blocks reappear) |
 
 ## Delete Page
 
@@ -208,11 +314,12 @@ mutation DeletePage($shopId: String!, $pageId: String!) {
 
 ## Common Page Templates
 
-AI can generate content for these standard pages:
+AI can generate content for these standard pages. Reserved slugs (e.g.
+`about`, `blog`, `products`) are NOT in this list — those are owned by
+built-in storefront routes, not by this skill.
 
 | Page | Slug | Suggested Settings |
 |---|---|---|
-| About Us | `about` | `showInHeader: true`, `showInFooter: true` |
 | Contact | `contact` | `showInHeader: true`, `showInFooter: true` |
 | Terms & Conditions | `terms` | `showInFooter: true` |
 | Privacy Policy | `privacy` | `showInFooter: true` |
@@ -221,6 +328,11 @@ AI can generate content for these standard pages:
 | Returns & Refunds | `returns` | `showInFooter: true` |
 | Size Guide | `size-guide` | `showInHeader: false` |
 | Our Story | `our-story` | `showInHeader: true` |
+
+> **About page lives elsewhere.** The About page slug is reserved because
+> the storefront ships a dedicated About route powered by Layout Settings.
+> Use `updateShopAboutPage` from `admin/shop-layout.md` instead of trying to
+> create a custom page with `slug: "about"`.
 
 ---
 
@@ -446,9 +558,12 @@ If no icon matches the context, you may use an emoji string as fallback — the 
 
 ## Agent Notes
 
-- **Slug rules**: Must be unique per shop. Use lowercase, hyphens for spaces, no special characters. E.g. `"terms-and-conditions"` not `"Terms & Conditions"`.
-- **Content format**: **Preferred** — JSON array of rich blocks (stringified). **Fallback** — raw HTML string. Both work.
-- **SEO as JSON string**: The `seo` field is a JSON **string** (not a JSON object). Serialize it: `'{"metaTitle":"...","metaDescription":"..."}'`.
-- **AI content generation**: When a user asks "write an about page" or "create a contact page", generate rich block layouts (hero + columns + features + spacers), not just raw HTML. Tailor content to the shop's business type. **Always use `icon` (SVG name) instead of `emoji`** for a professional look.
+- **Slug rules**: Must be unique per shop. Use lowercase, hyphens for spaces, no special characters. E.g. `"terms-and-conditions"` not `"Terms & Conditions"`. Reserved slugs (`about`, `blog`, `checkout`, `products`, etc.) are rejected by the backend — see the list at the top.
+- **About page is reserved** — generate it via `updateShopAboutPage` (`admin/shop-layout.md`), not via `createPage`. The backend returns a specific error message pointing the user there.
+- **Pick the right render mode first.** `"rich"` for almost every page (themed, mobile-responsive, sanitized). `"html"` only when the merchant explicitly wants custom CSS / fonts / animations the rich blocks can't do — and accept that it renders inside a sandboxed iframe (no parent-DOM access).
+- **`content` is always a JSON-string** of a block array, even when `renderMode: "html"` — pass `"[]"` in that case to satisfy the schema.
+- **`customHtml` must be a complete HTML document** (`<!DOCTYPE html><html>…`). The iframe will not inherit the shop's theme stylesheet — include your own `<style>` block.
+- **SEO as JSON string**: The `seo` field is a JSON **string** (not a JSON object). Serialize it: `'{"metaTitle":"...","metaDescription":"..."}'`. Pass `""` to clear.
+- **AI content generation**: When a user asks "create a contact page", default to rich block layouts (hero + columns + features + spacers). Tailor content to the shop's business type. **Always use `icon` (SVG name) instead of `emoji`** for a professional look. Only generate `customHtml` if the user explicitly asks for a custom-coded page.
 - **Don't duplicate**: Check if a page with the same slug already exists before creating. If it exists, offer to update it instead.
 - **Images must be uploaded first**: Use `POST /uploads/s3` for all images. Never use placeholder URLs.

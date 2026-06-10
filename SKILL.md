@@ -102,15 +102,15 @@ Load **only** the file relevant to the user's request:
 ### Shop Administration
 | File | Use when user says… |
 |---|---|
-| [admin/shop.md](skills/admin/shop.md) | "create shop", "rename shop", "activate", "set location", "customers", "notifications", "set business category" |
+| [admin/shop.md](skills/admin/shop.md) | "create shop", "rename shop", "activate", "set location", "customers", "notifications", "set business category", "footer logo", "show shop name", "branding" |
 | [admin/seo.md](skills/admin/seo.md) | "meta title", "meta description", "SEO", "keywords", "favicon", "og image", "change shop name", "update logo" |
-| [admin/pages.md](skills/admin/pages.md) | "create page", "about us page", "terms", "privacy policy", "contact page", "custom page", "FAQ page" |
+| [admin/pages.md](skills/admin/pages.md) | "create page", "terms", "privacy policy", "contact page", "custom page", "FAQ page", "static page", "custom HTML page", "iframe page" |
 | [admin/modules.md](skills/admin/modules.md) | "enable POS", "turn on stocking", "COD settings", "announcement", "business hours" |
 | [admin/team.md](skills/admin/team.md) | "add staff", "create role", "remove member" |
 | [admin/shipping.md](skills/admin/shipping.md) | "shipping fee", "delivery zones", "add delivery option" |
-| [admin/discounts.md](skills/admin/discounts.md) | "create coupon", "discount rule", "sale on product" |
+| [admin/discounts.md](skills/admin/discounts.md) | "create coupon", "discount rule", "sale on product", "happy hour", "weekend discount", "first order discount", "win back", "scheduled discount", "recurring discount" |
 | [admin/sections.md](skills/admin/sections.md) | "create section", "add banner", "hero", "promo banner", "categories grid", "testimonials", "FAQ", "newsletter", "video hero", "countdown", "section explorer", "homepage layout", "design", "storefront" |
-| [admin/shop-layout.md](skills/admin/shop-layout.md) | "header", "footer", "about page", "customize header", "footer links", "about us page", "blog layout", "navigation", "announcement bar" |
+| [admin/shop-layout.md](skills/admin/shop-layout.md) | "header", "footer", "about page", "customize header", "footer links", "about us page", "blog layout", "navigation", "announcement bar", "look", "shop look", "atelier", "weyoung", "editorial look", "brand color", "font pair", "density", "404 page", "not found template" |
 | [admin/appearance.md](skills/admin/appearance.md) | "change theme", "custom colors", "shop appearance", "upload font", "change font", "border radius", "dark mode", "branding", "reset theme" |
 | [admin/customer-auth.md](skills/admin/customer-auth.md) | "customer login", "telegram auth", "user token", "initData", "connect account", "register user", "customer JWT" |
 | [admin/customer-service-agent.md](skills/admin/customer-service-agent.md) | "build CS bot", "customer service agent", "shop bot", "telegram bot for customers", "AI assistant for shop", "OpenClaw agent" |
@@ -202,6 +202,19 @@ DiscountType:         FIXED | PERCENTAGE | LOCKED_PRICE
 ShippingDiscountType: FIXED | PERCENTAGE | FREE
 BxgyGetDiscountType:  FREE | PERCENTAGE | FIXED_AMOUNT_OFF
 UsageTarget:          EVERY_ONE | MEMBERSHIP | COUPON
+Day (for schedules): MON | TUE | WED | THU | FRI | SAT | SUN
+```
+
+### Shop Layout Enums (Looks + Announcement)
+> ⚠️ **These use snake_case on the wire** (not SCREAMING_SNAKE_CASE) —
+> matches the storage tag.
+```
+LookId:                  classic | weyoung | atelier | editorial
+                       | marketplace | maison | flagship | studio
+FontPair:                sans | serif_sans | slab_sans | mono_sans | serif_serif
+Density:                 compact | comfortable | spacious
+AnnouncementTemplateKind: classic_promo_socials | classic_centered_minimal
+                       | classic_editorial_dark | weyoung
 ```
 
 ---
