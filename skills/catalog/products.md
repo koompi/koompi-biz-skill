@@ -317,7 +317,7 @@ ignored — the stored config is cleared).
 ---
 
 ## Agent Notes
-- **Images**: Upload files via `POST https://api.riverbase.org/uploads/s3` (multipart, field name `file`, header `authorization: <token>`). Returns a full CDN URL like `https://cdn.riverbase.org/uuid.webp` — pass that URL in the `images` array. Images are auto-converted to WebP (800px max width).
+- **Images**: Upload files via `POST ${RIVERBASE_API_URL%/graphql}/uploads/s3` (multipart, field name `file`, header `Authorization: <token>`). The response body is the stored file's full URL (e.g. `https://gateway.lite.riverbase.org/<uuid>.webp` in production) — pass that URL in the `images` array. Images are converted to WebP, max 2400px wide.
 - **Variants vs Options**: `variants` are stock-tracked (Size L = separate SKU). `options` are non-stock (Sugar Level = no inventory impact). Use variants when the shop needs per-attribute stock tracking.
 - **Filtering tip**: Use `keyword` for text search. Use `filter.categories` to narrow by category ID array.
 - **Combo + discounts**: default to `comboAllowDiscounts: false` unless the merchant explicitly wants per-component discounting.

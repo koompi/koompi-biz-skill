@@ -86,7 +86,7 @@ wordmark logo and don't want duplicated text.
 ### Recipe — "Different darker logo in the footer"
 1. Upload via `POST /uploads/s3` (or `/hq` for high-res) → returns CDN URL.
 2. ```json
-   { "shopId": "...", "footerLogo": "https://cdn.riverbase.org/<uuid>.webp" }
+   { "shopId": "...", "footerLogo": "https://gateway.lite.riverbase.org/<uuid>.webp" }
    ```
 
 ### Recipe — "Clear the footer-logo override"

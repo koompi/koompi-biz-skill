@@ -1,32 +1,58 @@
 # Shop Modules & Settings
 
 ## Update Modules (feature toggles)
+
+> ⚠️ **This mutation writes every flag at once.** The eight booleans and
+> `cartMode` are required, and `cardStyle` / `showProductFilter` fall back to
+> `MINIMAL` / `false` when you leave them out — so omitting them silently
+> resets the shop's product-card style and filter bar. Always read
+> `shopId(shopId) { modules { … } }` first and send every current value back
+> with only your change applied.
+
 ```graphql
+query CurrentModules($shopId: String!) {
+  shopId(shopId: $shopId) {
+    modules {
+      blogging shopping ticketing stocking reselling quoting
+      codPayment posCodEnabled cartMode cardStyle showProductFilter
+      productDetailThemeId appContainerSize
+    }
+  }
+}
+
 mutation UpdateModules(
   $shopId: String!
   $blogging: Boolean!
   $shopping: Boolean!
   $ticketing: Boolean!
   $stocking: Boolean!
-  $reselling: Boolean!
+  $reselling: Boolean!        # ignored unless the caller is a platform admin
   $quoting: Boolean!
-  $cartMode: String       # "DETAILS_ONLY" or "FULL_CHECKOUT"
-  $codPayment: Boolean    # enable cash on delivery
-  $posCodEnabled: Boolean # enable POS COD mode
-  $cardStyle: String      # "MINIMAL" | "BORDERED" | "OVERLAY" | "GLASS"
-  $showProductFilter: Boolean
+  $codPayment: Boolean!       # enable cash on delivery
+  $posCodEnabled: Boolean!    # enable POS COD mode
+  $cartMode: CartMode!        # DETAILS_ONLY | QUICK_CART_ONLY | BOTH
+  $cardStyle: CardStyle       # MINIMAL | BORDERED | OVERLAY | GLASS — omitted = MINIMAL
+  $showProductFilter: Boolean # omitted = false
+  $productDetailThemeId: String          # omitted = unchanged
+  $appContainerSize: AppContainerSize    # STANDARD | MEDIUM | LARGE | FULLSCREEN — omitted = unchanged
 ) {
   shopUpdateModules(
     shopId: $shopId blogging: $blogging shopping: $shopping
     ticketing: $ticketing stocking: $stocking reselling: $reselling
-    quoting: $quoting cartMode: $cartMode codPayment: $codPayment
-    posCodEnabled: $posCodEnabled cardStyle: $cardStyle
+    quoting: $quoting codPayment: $codPayment posCodEnabled: $posCodEnabled
+    cartMode: $cartMode cardStyle: $cardStyle
     showProductFilter: $showProductFilter
+    productDetailThemeId: $productDetailThemeId
+    appContainerSize: $appContainerSize
   ) {
-    id modules { shopping stocking quoting codPayment posCodEnabled cartMode cardStyle }
+    id modules { shopping stocking quoting codPayment posCodEnabled cartMode cardStyle showProductFilter appContainerSize }
   }
 }
 ```
+
+`cardStyle`, `showProductFilter`, `productDetailThemeId` and
+`appContainerSize` are storefront **appearance** settings (the Appearance →
+Products / Layout panels) — see `admin/appearance.md` for what each one looks like.
 
 ### Module descriptions
 | Module | Purpose |
@@ -41,8 +67,8 @@ mutation UpdateModules(
 | `posCodEnabled` | Accept POS COD (in-store cash register) |
 
 ### Workflow: Enable POS mode
-1. Set `codPayment: true` and `posCodEnabled: true`
-2. Set `cartMode: "FULL_CHECKOUT"` for complete POS flow
+1. Read the current modules (above).
+2. Send them all back with `codPayment: true` and `posCodEnabled: true`.
 
 ## Set Business Hours
 ```graphql
@@ -61,15 +87,11 @@ mutation SetBusinessHours($shopId: String!, $businessHours: [BusinessHourInput!]
 ```
 Include all open days. Days not in the array are treated as closed.
 
-## Set Announcement
-```graphql
-mutation SetAnnouncement($shopId: String!, $announcement: String) {
-  updateShopAnnouncement(shopId: $shopId, announcement: $announcement) {
-    id modules { announcement }
-  }
-}
-```
-Pass `null` to clear the announcement.
+## Announcement bar
+
+The old `modules.announcement` text field is no longer writable:
+`updateShopAnnouncement` now takes `enabled` / `kind` / `config` and returns a
+`ShopLayout`. Use the announcement-bar section of `admin/shop-layout.md`.
 
 ## Configure Stock Debit Rules
 Controls when inventory is automatically debited: at order creation or at order completion.

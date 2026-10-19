@@ -75,7 +75,7 @@ mutation CreateEvent(
 
 ## Blog Layout (CMS)
 
-Control how the blog page looks — template, sidebar, featured post, etc. See [shop-layout.md](shop-layout.md#update-blog-layout) for full details and presets.
+Control how the `/blog` page looks. See [admin/shop-layout.md](../admin/shop-layout.md) ("Blog page") for the full JSON — keys are **snake_case** and the write replaces the whole blog layout.
 
 Quick reference:
 ```graphql
@@ -87,7 +87,7 @@ mutation UpdateBlogLayout($shopId: String!, $blogLayout: JSON!) {
 }
 ```
 
-Templates: `classic_list` | `magazine_grid` | `minimal_list` | `card_grid`
+Templates: `magazine_grid` / `card_grid` render a grid; `classic_list` / `minimal_list` / `custom` render a list. The storefront honours only `template`, `hero_title`, `hero_subtitle`, `show_date` and `show_excerpt`; the other flags are stored but unused.
 
 ---
 
@@ -95,5 +95,5 @@ Templates: `classic_list` | `magazine_grid` | `minimal_list` | `card_grid`
 
 ## Agent Notes
 - **Posts vs Events**: Posts are blog articles. Events have a date, venue, and optional ticket price/capacity.
-- **Images**: Upload first via `POST /uploads/s3`, then pass returned CDN URLs.
-- **Blog layout**: To customize the blog page appearance (grid vs list, sidebar, featured post), use `updateShopBlogLayout` documented in [shop-layout.md](shop-layout.md).
+- **Images**: Upload first via `POST ${RIVERBASE_API_URL%/graphql}/uploads/s3`, then pass the returned URLs.
+- **Blog layout**: To customize the blog page appearance (grid vs list, hero title, date and excerpt), use `updateShopBlogLayout` documented in [admin/shop-layout.md](../admin/shop-layout.md).

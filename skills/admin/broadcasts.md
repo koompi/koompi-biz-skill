@@ -68,7 +68,7 @@ query Broadcasts($shopId: String!) {
 ```json
 {
   "shopId": "...",
-  "imageUrl": "https://cdn.riverbase.org/promo.webp",
+  "imageUrl": "https://gateway.lite.riverbase.org/promo.webp",
   "caption": "🎉 Friends & Family weekend — take 20% off everything.\nUse code FAMILY at checkout.",
   "buttonLabel": "Shop the sale",
   "buttonUrl": "https://<shop>.riverbase.shop"
@@ -126,7 +126,7 @@ Use `Customer.id` (not `user.id`) as `customerId` for `sendDirectMessage`.
 {
   "shopId": "...",
   "customerId": "<customer_id>",
-  "imageUrl": "https://cdn.riverbase.org/cart.webp",
+  "imageUrl": "https://gateway.lite.riverbase.org/cart.webp",
   "caption": "Hey! Looks like you left something in your cart. Want to finish checking out?",
   "buttonLabel": "Resume checkout",
   "buttonUrl": "https://<shop>.riverbase.shop/cart"

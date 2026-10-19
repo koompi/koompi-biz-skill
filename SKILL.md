@@ -10,10 +10,12 @@
 | **Staging** | `https://staging-lite-api.riverbase.org/graphql` | `https://staging-lite-api.riverbase.org/uploads/s3` | `https://staging-lite-api.riverbase.org/uploads/s3/hq` | `https://staging-lite-api.riverbase.org/uploads/font` |
 
 All upload endpoints accept `multipart/form-data` POST with field name `file`,
-authenticated via the same `Authorization: <token>` header. Response body is
-the full CDN URL string.
-- `/uploads/s3` → ≤800px WebP (logos, thumbs, small decorative).
-- `/uploads/s3/hq` → ≤1920px WebP (hero / banner / promo / immersive).
+sent with the same `Authorization: <token>` header. The response body is the
+plain URL string of the stored file. They sit **beside** `/graphql`, not under
+it: build them from the API origin, `${RIVERBASE_API_URL%/graphql}/uploads/...`.
+- `/uploads/s3` → images re-encoded to ≤2400px WebP (logos, cards, inline photos).
+- `/uploads/s3/hq` → images re-encoded to ≤3840px WebP (hero / banner / promo / cover).
+- Both also take video files, stored as-is (no transcoding), max 99 MB — see `admin/sections.md` for per-slot limits.
 - `/uploads/font` → font files (`.woff2`, `.woff`, `.ttf`, `.otf`, max 2 MB).
 
 | Key | Value |
@@ -102,16 +104,17 @@ Load **only** the file relevant to the user's request:
 ### Shop Administration
 | File | Use when user says… |
 |---|---|
+| [admin/storefront-design.md](skills/admin/storefront-design.md) | **Start here for broad design work:** "redesign my shop", "customise my storefront", "make my shop look premium / modern / like <brand>", "change the whole look", "design my shop", "set up my shop's appearance". It sequences theme → chrome → product display → homepage → pages and routes to the files below. |
 | [admin/shop.md](skills/admin/shop.md) | "create shop", "rename shop", "activate", "set location", "customers", "notifications", "set business category", "footer logo", "show shop name", "branding" |
 | [admin/seo.md](skills/admin/seo.md) | "meta title", "meta description", "SEO", "keywords", "favicon", "og image", "change shop name", "update logo" |
-| [admin/pages.md](skills/admin/pages.md) | "create page", "terms", "privacy policy", "contact page", "custom page", "FAQ page", "static page", "custom HTML page", "iframe page" |
-| [admin/modules.md](skills/admin/modules.md) | "enable POS", "turn on stocking", "COD settings", "announcement", "business hours" |
+| [admin/pages.md](skills/admin/pages.md) | "create page", "custom page", "contact page", "FAQ page", "terms", "privacy policy", "shipping page", "returns policy", "size guide", "landing page", "campaign page", "lookbook page", "static page", "custom HTML page", "upload my HTML", "add page to header/footer menu", "edit page", "delete page", "page SEO" |
+| [admin/modules.md](skills/admin/modules.md) | "enable POS", "turn on stocking", "COD settings", "enable blog", "enable ticketing", "business hours", "stock debit", "unpaid order timeout" |
 | [admin/team.md](skills/admin/team.md) | "add staff", "create role", "remove member" |
 | [admin/shipping.md](skills/admin/shipping.md) | "shipping fee", "delivery zones", "add delivery option" |
 | [admin/discounts.md](skills/admin/discounts.md) | "create coupon", "discount rule", "sale on product", "happy hour", "weekend discount", "first order discount", "win back", "scheduled discount", "recurring discount" |
-| [admin/sections.md](skills/admin/sections.md) | "create section", "add banner", "hero", "promo banner", "categories grid", "testimonials", "FAQ", "newsletter", "video hero", "countdown", "section explorer", "homepage layout", "design", "storefront" |
-| [admin/shop-layout.md](skills/admin/shop-layout.md) | "header", "footer", "about page", "customize header", "footer links", "about us page", "blog layout", "navigation", "announcement bar", "look", "shop look", "atelier", "weyoung", "editorial look", "brand color", "font pair", "density", "404 page", "not found template" |
-| [admin/appearance.md](skills/admin/appearance.md) | "change theme", "custom colors", "shop appearance", "upload font", "change font", "border radius", "dark mode", "branding", "reset theme" |
+| [admin/sections.md](skills/admin/sections.md) | "homepage", "home page layout", "add section", "hero", "banner", "promo", "categories grid", "bento", "product grid", "4 columns", "5 columns", "product row", "carousel", "slider", "best sellers", "hand-picked products", "reorder sections", "move section", "testimonials", "reviews section", "FAQ section", "brand logos", "countdown", "sale timer", "video", "reels", "TikTok videos", "YouTube shorts", "newsletter", "rich text", "image with text", "CTA", "products page layout" |
+| [admin/shop-layout.md](skills/admin/shop-layout.md) | "header", "footer", "menu", "navigation links", "footer links", "social links", "announcement bar", "top bar", "promo bar", "countdown bar", "sale countdown", "bottom bar", "nav bar", "desktop bar", "side rail", "phone bar", "tab bar", "floating bar", "look", "atelier", "weyoung", "marketplace", "about page", "about us", "team", "timeline", "blog layout", "404 page", "not found page", "reset layout" |
+| [admin/appearance.md](skills/admin/appearance.md) | "change theme", "brand colour", "custom colors", "colour palette", "preset theme", "dark shop", "change font", "upload font", "Khmer font", "MiSans", "Google Sans", "border radius", "reset theme", "card style", "product card look", "quick add / cart mode", "product page layout", "magazine / maison layout", "storefront width", "full width", "coming soon", "pre-launch", "launch countdown" |
 | [admin/customer-auth.md](skills/admin/customer-auth.md) | "customer login", "telegram auth", "user token", "initData", "connect account", "register user", "customer JWT" |
 | [admin/customer-service-agent.md](skills/admin/customer-service-agent.md) | "build CS bot", "customer service agent", "shop bot", "telegram bot for customers", "AI assistant for shop", "OpenClaw agent" |
 | [admin/broadcasts.md](skills/admin/broadcasts.md) | "broadcast", "blast", "send to all customers", "direct message", "DM customer", "abandoned cart message", "report group", "telegram group", "owner notifications" |
@@ -162,11 +165,14 @@ InventoryLocationType: WAREHOUSE | STORE | DISPLAY
 
 ### Shop Enums
 ```
-OperationalMode: OPEN | CLOSED | BUSY
-ShippingModel:   DISTANCE_BASED | ZONE_BASED | FLAT_RATE | THIRD_PARTY_ONLY
-CartMode:        DETAILS_ONLY | FULL_CHECKOUT
-CardStyle:       MINIMAL | BORDERED | OVERLAY | GLASS
+OperationalMode:  OPEN | CLOSED | BUSY
+ShippingModel:    DISTANCE_BASED | ZONE_BASED | FLAT_RATE | THIRD_PARTY_ONLY
+CartMode:         DETAILS_ONLY | QUICK_CART_ONLY | BOTH
+CardStyle:        MINIMAL | BORDERED | OVERLAY | GLASS
+AppContainerSize: STANDARD | MEDIUM | LARGE | FULLSCREEN
 ```
+`productDetailThemeId` (a String, not an enum): `classic | magazine | maison | camprotec`.
+Theme JSON `font.source` is written `"Google"` / `"Custom"` but reads back as `google` / `custom`.
 
 ### Section Enums (Section Explorer) — SCREAMING_SNAKE_CASE on the wire
 ```
@@ -179,8 +185,9 @@ SectionKind:     HERO_EDITORIAL | HERO_IMMERSIVE | HERO_CENTERED_MINIMAL
                  | FAQ_ACCORDION | BRAND_STRIP
                  | IMAGE_TEXT | CTA_BANNER | COUNTDOWN
                  | RICH_TEXT | NEWSLETTER | VIDEO_HERO
+                 | VIDEO_REELS_MARQUEE | VIDEO_REELS_DECK
 SectionStatus:   DRAFT | PUBLISHED | HIDDEN
-SectionLayout:   GRID_1 | GRID_2 | GRID_3 | SLIDER | HORIZONTAL_SCROLL
+SectionLayout:   GRID_1 | GRID_2 | GRID_3 | GRID_4 | GRID_5 | SLIDER | HORIZONTAL_SCROLL
 SectionSpacing:  NONE | SM | MD | LG | XL | XXL
 DataSource:      PRODUCTS | EVENTS | POSTS
                  | PRODUCT_CATEGORIES | EVENT_CATEGORIES | POST_CATEGORIES
@@ -188,12 +195,15 @@ DataType:        STATIC | DYNAMIC
 StaticType:      IMAGE | DESIGN
 TitleAlignment:  LEFT | CENTER | RIGHT
 SortOption:      NAME_ASC | NAME_DESC | PRICE_ASC | PRICE_DESC | DATE_ASC | DATE_DESC
+                 | MANUAL            # "as arranged": the order of filterCondition.items
 FilterType:      PRICE_RANGE | CATEGORIES | SUB_CATEGORIES | BRANDS | ITEMS
-                 | PROMOTIONS | NONE | MULTI
+                 | PROMOTIONS | NONE | MULTI   # MULTI does not filter a section feed
 ```
 > **Note:** the JSON inside `kindConfig` uses **camelCase** field names
-> (`headingAccent`, `leftProductId`, `textColor`, etc.). Only the top-level
-> GraphQL enums are SCREAMING_SNAKE_CASE.
+> (`headingAccent`, `leftProductId`, `textColor`, etc.) and lowercase enum
+> values (`"variant": "outline"`, `"provider": "tiktok"`, `"speed": "slow"`).
+> Only the top-level GraphQL enums are SCREAMING_SNAKE_CASE. Sections render
+> only on the `home`, `products`, `posts` and `events` pages.
 
 ### Discount Enums
 ```
@@ -205,17 +215,34 @@ UsageTarget:          EVERY_ONE | MEMBERSHIP | COUPON
 Day (for schedules): MON | TUE | WED | THU | FRI | SAT | SUN
 ```
 
-### Shop Layout Enums (Looks + Announcement)
+### Shop Layout Enums (Looks, Announcement, Navigation bars)
 > ⚠️ **These use snake_case on the wire** (not SCREAMING_SNAKE_CASE) —
 > matches the storage tag.
 ```
-LookId:                  classic | weyoung | atelier | editorial
-                       | marketplace | maison | flagship | studio
-FontPair:                sans | serif_sans | slab_sans | mono_sans | serif_serif
-Density:                 compact | comfortable | spacious
+LookId:                   classic | weyoung | atelier | editorial
+                        | marketplace | maison | flagship | studio
+FontPair:                 sans | serif_sans | slab_sans | mono_sans | serif_serif
+Density:                  compact | comfortable | spacious
 AnnouncementTemplateKind: classic_promo_socials | classic_centered_minimal
-                       | classic_editorial_dark | weyoung
+                        | classic_editorial_dark | weyoung
+DesktopBarPosition:       bottom | left | right
+BarLabels:                icons | icons_and_labels
+BarColour:                light | dark | brand
+MobileBarStyle:           classic | floating | pill | split | cradle
 ```
+Header / footer JSON string values (snake_case). Only these render as designed
+templates; the API accepts more, which fall back to a plain generic bar:
+```
+header.layout:  classic | minimal | centered | atelier | marketplace | weyoung
+footer.layout:  columns | simple | newsletter_focus | atelier_footer
+              | marketplace_footer_look | weyoung_plus | weyoung
+header.bg_style: transparent | solid | blurred | custom
+footer.bg_style: default | dark | light | primary | custom
+404 templateId:  simple | illustrated | bold | lost | minimal | animated
+```
+> A Look's `brandColor` / `fontPair` / `density` are stored but **not applied**
+> by the storefront. The brand colour and font come from the theme
+> (`admin/appearance.md`).
 
 ---
 
@@ -241,19 +268,34 @@ storefront doesn't control. Upload first, then write the returned string into
 the mutation.
 
 ```bash
-# canonical recipe
+# canonical recipe — RIVERBASE_API_URL ends in /graphql, so strip it first
 curl -X POST -H "Authorization: $RIVERBASE_API_KEY" \
-  -F "file=@./local.jpg" "$RIVERBASE_API_URL/uploads/s3/hq"
-# → "https://cdn.riverbase.org/<uuid>.webp"
+  -F "file=@./local.jpg" "${RIVERBASE_API_URL%/graphql}/uploads/s3/hq"
+# → "https://<storage-gateway>/<uuid>.webp"   (use the returned string as-is)
 ```
 
 ### JSON-scalar inputs take parsed JSON, not strings
 
 `updateTheme(theme: JSON!)`, `updateShopHeader(header: JSON!)`,
 `updateShopFooter`, `updateShopAboutPage`, `updateShopBlogLayout`,
-`updateShopLayout`, and `createSection`/`updateSection`'s `kindConfig: JSON`
-all accept the JSON value directly (an object in `variables`), **not a
-JSON-encoded string**. Stringifying first will fail server-side validation.
+`updateShopLayout`, `updateShopAnnouncement`'s `config`, and
+`createSection`/`updateSection`'s `kindConfig: JSON` all accept the JSON value
+directly (an object in `variables`), **not a JSON-encoded string**.
+Stringifying first will fail server-side validation.
+
+The opposite holds for pages: `createPage`/`updatePage` take `content` and
+`seo` as **String** arguments holding JSON text (see `admin/pages.md`).
+
+Key casing inside those JSON values is **not uniform** — check the file before
+writing:
+- Theme JSON: `shop_id`, camelCase colour keys, snake_case custom-font keys (`admin/appearance.md`).
+- Header / footer / about / blog JSON: **snake_case** keys; camelCase keys are silently ignored (`admin/shop-layout.md`).
+- Announcement `config` and section `kindConfig`: camelCase keys.
+- Page `seo` JSON text: snake_case keys (`meta_title`).
+
+Most of these writes **replace the whole object** (theme, each layout section,
+`kindConfig`, the announcement surface, the module set): read the current
+value, change it in memory, and send all of it back.
 
 ```jsonc
 // ✅ correct — kindConfig is an object
@@ -337,8 +379,9 @@ Show a summary of what will be affected, then ask "Are you sure? Reply Yes to co
 | `deleteCoupon` | Deletes a coupon code | admin/discounts.md |
 | `deleteDiscountRule` | Deletes a discount rule | admin/discounts.md |
 | `deleteSection` | Deletes a storefront section | admin/sections.md |
-| `resetShopLayout` | Resets all layout customizations (header, footer, about, blog) to defaults | admin/shop-layout.md |
-| `resetTheme` | Resets theme (colors, radius, fonts) to defaults | admin/appearance.md |
+| `resetShopLayout` | Resets ALL chrome: header + footer (both disabled), about, blog, announcement, Look and its undo history, 404 choice, both navigation bars | admin/shop-layout.md |
+| `resetTheme` | Resets theme (colors, radius, font) to defaults — owner only | admin/appearance.md |
+| `shopSetComingSoon(comingSoon: true)` | Hides the whole storefront from shoppers behind a teaser | admin/appearance.md |
 | `deleteDesign` | Deletes a canvas design | admin/sections.md |
 | `deleteTeir` | Deletes a membership tier | advanced/membership.md |
 | `deleteMembership` | Revokes a user's membership | advanced/membership.md |

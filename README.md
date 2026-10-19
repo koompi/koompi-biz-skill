@@ -17,9 +17,11 @@ Give the agent a JWT token and a shop ID, and it can:
 - Configure shipping fees, delivery zones, and options
 - Create coupons and discount rules
 - Manage staff roles and permissions
-- Set business hours, announcements, and shop modules
-- **Customize shop layout: header, footer, about page, and blog layout**
-- **Section Explorer: build storefront homepages with 20+ section kinds (hero, promo mosaic, FAQ, testimonials, countdown, video, etc.) — each with per-section background, text color, and draft/published lifecycle**
+- Set business hours and shop modules
+- **Design the storefront end to end** (`skills/admin/storefront-design.md` sequences it): theme colours, radius and Khmer-ready fonts; product card style, quick add, product page layout and width; Coming Soon page
+- **Customize the shop chrome**: header, footer, announcement bar (incl. sale countdown), desktop and phone navigation bars, about page, blog layout, 404 page
+- **Section Explorer: build the home / products pages from 23 section kinds** (heroes, category tiles, 1–5 column product grids and hand-ordered rows, promos, testimonials, FAQ, countdown, video hero, TikTok / YouTube reels…) — each with background, text colour, and draft/published lifecycle
+- **Custom pages**: themed rich pages (contact, FAQ, policies) and fully designed HTML landing pages
 - **Discount engine: line-item / cart / shipping / BXGY rules, plus merchant overrides (`forceApply`, `exclusionGroupId`, `exclusiveWithBxgy`) and per-customer caps**
 - **Combo / bundle products** with optional per-component discounting
 - **Shade Finder** (cosmetics try-on) — map product variants to shades over lips / eyes / lashes / cheeks / foundation
@@ -51,15 +53,16 @@ skills/
     transactions.md               ← Stock in/out, transfers, adjustments
     checks.md                     ← Stock balance, availability checks
   admin/
-    shop.md                       ← Shop settings, GPS, bot, customers
+    storefront-design.md          ← START HERE for design work: snapshot, order of operations, mood presets, quality bar
+    shop.md                       ← Shop settings, logo & branding, GPS, bot, customers
     modules.md                    ← Feature toggles, business hours
     team.md                       ← Roles & members
     shipping.md                   ← Shipping rules & delivery options
     discounts.md                  ← Coupons & discount rules (force apply, exclusion groups, BXGY, recipes)
-    sections.md                   ← Section Explorer + canvas designs (20+ section kinds, kindConfig, backgrounds, draft/publish lifecycle)
-    shop-layout.md                ← Header, footer, about page & blog layout customization
-    appearance.md                 ← Theme colors, fonts, border radius, branding
-    pages.md                      ← Custom pages (about, terms, FAQ, contact)
+    sections.md                   ← Section Explorer: 23 kinds, kindConfig schemas, feeds, uploads, composing a page
+    shop-layout.md                ← Header, footer, announcement bar, nav bars, Looks, about, blog, 404
+    appearance.md                 ← Theme colours, fonts, radius, presets, product display, width, Coming Soon
+    pages.md                      ← Custom pages: rich (themed HTML) and html (designed landing pages)
     seo.md                        ← Meta title, description, favicon, og image
     customer-auth.md              ← Customer login, Telegram auth
     customer-service-agent.md     ← Build customer-facing CS bots
@@ -111,7 +114,7 @@ All prices are String type. Pagination defaults: limit 20, page 1.
 - **Price = String** — all monetary values are `String`, not `Float`
 - **One file at a time** — the router table in SKILL.md tells you which file to load
 - **`shopId` everywhere** — every operation needs it; resolve once at session start
-- **⚠️ Delete/Remove = ALWAYS confirm** — there are 16 destructive mutations across the skill files (listed in SKILL.md). The agent must **never** execute any of them without showing a summary and getting an explicit "Yes" or a Telegram confirmation button tap first
+- **⚠️ Delete/Remove/Reset = ALWAYS confirm** — every destructive mutation is listed in SKILL.md. The agent must **never** execute any of them without showing a summary and getting an explicit "Yes" or a Telegram confirmation button tap first
 
 ## API Reference
 
@@ -119,7 +122,7 @@ All prices are String type. Pagination defaults: limit 20, page 1.
 |---|---|
 | **Production GraphQL** | `https://api.riverbase.org/graphql` |
 | **Staging GraphQL** | `https://staging-lite-api.riverbase.org/graphql` |
-| **Upload Endpoint** | `https://api.riverbase.org/uploads/s3` |
+| **Upload Endpoints** | `https://api.riverbase.org/uploads/s3` (≤2400px WebP), `/uploads/s3/hq` (≤3840px WebP), `/uploads/font` |
 | **Auth** | `Authorization: <token>` (no `Bearer` prefix) |
 | **Method** | `POST` with JSON body `{"query": "...", "variables": {...}}` |
 
@@ -131,7 +134,7 @@ When the platform adds new GraphQL mutations/queries or changes existing ones, t
 
 ```bash
 # Option 1: Pull the latest changes (if you cloned the repo)
-git pull origin main
+git pull origin master
 
 # Option 2: Clone fresh (replace the existing copy)
 rm -rf koompi-biz-skill
